@@ -1,0 +1,68 @@
+<header class="avtt-sheet-header">
+  <div>
+    <strong>{{name}}</strong>
+    <span class="avtt-muted">{{localize "AVTT.Sheet.Level"}} {{level}}{{#if classes}} · {{classes}}{{/if}}</span>
+  </div>
+  {{!-- Level up, at the right of the name and level (dnd5e; SotDL levels are given by the GM in the system's sheet). --}}
+  {{#if levelUp.canLevel}}
+  <button type="button" data-action="levelUp" data-tooltip="" class="avtt-sheet-levelup {{#if levelUp.ready}}avtt-level-ready{{/if}}"
+          aria-label="{{#if levelUp.ready}}{{localize 'AVTT.Pill.LevelUpReady'}}{{else}}{{localize 'AVTT.Pill.LevelUp'}}{{/if}}">
+    <i class="fa-solid fa-circle-up" inert></i>
+  </button>
+  {{/if}}
+</header>
+
+<nav class="avtt-tabs">
+  {{#each tabs}}
+  <button type="button" data-action="sheetTab" data-tab="{{id}}" class="{{#if active}}active{{/if}}">{{label}}</button>
+  {{/each}}
+</nav>
+
+<div class="avtt-sheet-body">
+  {{#if (eq tab "actions")}}{{> "modules/awesome-vtt/templates/actions.hbs"}}{{/if}}
+
+  {{#if (eq tab "spells")}}{{> "modules/awesome-vtt/templates/spells.hbs"}}{{/if}}
+
+  {{#if inventory}}{{> "modules/awesome-vtt/templates/inventory.hbs" inventory}}{{/if}}
+
+  {{#if abilities}}
+  <div class="avtt-ability-grid">
+    {{#each abilities}}
+    <div class="avtt-ability">
+      <span class="avtt-ability-abbr">{{abbr}}</span>
+      <span class="avtt-ability-score">{{value}}</span>
+      <button type="button" data-action="rollAbility" data-ability="{{key}}">{{#if checkLabel}}{{checkLabel}}{{else}}{{localize "AVTT.Sheet.Check"}}{{/if}} {{mod}}</button>
+      {{#if save}}
+      <button type="button" data-action="rollSave" data-ability="{{key}}" class="{{#if proficient}}proficient{{/if}}">{{localize "AVTT.Sheet.Save"}} {{save}}</button>
+      {{/if}}
+    </div>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  {{#if skills}}
+  <ul class="avtt-skill-list">
+    {{#each skills}}
+    <li>
+      <button type="button" data-action="rollSkill" data-skill="{{key}}" class="{{#if proficient}}proficient{{/if}}">
+        <span>{{label}}</span><strong>{{total}}</strong><em>({{passive}})</em>
+      </button>
+    </li>
+    {{/each}}
+  </ul>
+  {{/if}}
+
+  {{#if status}}
+  {{!-- Inspiration, rests, death saves and the HP field are in Quick actions, as on the phone. --}}
+  <section class="avtt-group">
+    <h4>{{localize "AVTT.Sheet.Conditions"}}</h4>
+    <div class="avtt-condition-grid">
+      {{#each conditions}}
+      <button type="button" data-action="toggleCondition" data-condition="{{id}}" class="{{#if active}}active{{/if}}">
+        <img src="{{img}}" alt=""><span>{{label}}</span>
+      </button>
+      {{/each}}
+    </div>
+  </section>
+  {{/if}}
+</div>

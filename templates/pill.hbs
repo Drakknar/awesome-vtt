@@ -1,0 +1,96 @@
+<div class="avtt-pill-body {{#if dying}}dying{{/if}}">
+  <img class="avtt-portrait" src="{{img}}" alt="">
+  <div class="avtt-pill-info">
+    <div class="avtt-pill-name">
+      <strong>{{name}}</strong>
+      {{#if playerName}}<span class="avtt-player">{{playerName}}</span>{{/if}}
+    </div>
+    <div class="avtt-hp-bar" style="--hp-pct: {{hp.pct}}%">
+      <span>{{hp.value}} / {{hp.max}}{{#if hp.temp}} <em>+{{hp.temp}}</em>{{/if}}</span>
+    </div>
+    {{!-- Each item names itself in Foundry's tooltip on hover (turned toward the seat's player). --}}
+    <div class="avtt-pill-stats">
+      {{#each stats}}
+      <span class="avtt-stat" data-tooltip="" aria-label="{{label}} {{value}}"><i class="fa-solid {{icon}}" inert></i> {{value}}</span>
+      {{/each}}
+      {{#if inspiration}}<span class="avtt-stat avtt-inspired" data-tooltip="" aria-label="{{inspirationLabel}}"><i class="fa-solid fa-star" inert></i></span>{{/if}}
+      {{#each conditions}}{{#if active}}<img class="avtt-condition-icon" src="{{img}}" alt="{{label}}" data-tooltip="" aria-label="{{label}}">{{/if}}{{/each}}
+    </div>
+    {{#unless isOwner}}<div class="avtt-warning">{{localize "AVTT.Pill.NotOwner"}}</div>{{/unless}}
+  </div>
+  {{!-- The armed advantage choice for the next d20 roll (set in the Dice panel or a prompt), as on the phone's pill. --}}
+  {{#if rollMode}}
+  <button type="button" data-action="togglePanel" data-panel="dice" data-tooltip="" class="avtt-roll-chip avtt-roll-{{rollMode.tone}}"
+          aria-label="{{rollMode.label}}">{{rollMode.short}}</button>
+  {{/if}}
+  {{!-- Round buttons: the full character sheet and the quick actions (Level up is in the character panel's header). --}}
+  <button type="button" data-action="openFullSheet" data-tooltip="" class="avtt-pill-round" aria-label="{{localize 'AVTT.Sheet.FullSheet'}}">
+    <i class="fa-solid fa-up-right-from-square" inert></i>
+  </button>
+  <button type="button" data-action="togglePanel" data-panel="quick" data-tooltip=""
+          class="avtt-pill-round avtt-pill-quick {{#if state.quick}}active{{/if}}" aria-label="{{localize 'AVTT.Pill.Quick'}}"
+          aria-pressed="{{#if state.quick}}true{{else}}false{{/if}}">
+    <i class="fa-solid {{#if state.quick}}fa-xmark{{else}}fa-bolt{{/if}}" inert></i>
+  </button>
+</div>
+{{!-- Below the player pill, the map tools and the sections; the seat may fold them away until the pointer comes near. --}}
+<div class="avtt-pill-more"><div class="avtt-pill-more-rows">
+{{!-- Favorites: the character's dnd5e favorites (starred in the sheet), one click to use; first row below the player pill. --}}
+{{#if canFavorite}}
+<div class="avtt-pill-row avtt-pill-favorites" role="toolbar" aria-label="{{localize 'AVTT.Pill.Favorites'}}">
+  {{#each favorites}}
+  <button type="button" data-action="useItem" data-item-id="{{id}}" data-tooltip="" aria-label="{{localize 'AVTT.Pill.UseFavorite' name=name}}">
+    <img src="{{img}}" alt="">
+  </button>
+  {{else}}
+  <span class="avtt-pill-favorites-hint"><i class="fa-regular fa-star" inert></i> {{localize "AVTT.Pill.FavoritesHint"}}</span>
+  {{/each}}
+</div>
+{{/if}}
+{{!-- Rows from the table centre toward the player: player pill (above), map tools and options, then the sections. --}}
+{{!-- Buttons without a visible label show Foundry's tooltip (data-tooltip="" uses the aria-label); the seat turns it toward its player. --}}
+{{!-- Map tools, always icon-only. Select, Target and Ruler use core's toolbar icons; core has no hand or zoom tools. --}}
+<div class="avtt-pill-row avtt-pill-tools" role="toolbar" aria-label="{{localize 'AVTT.Pill.MapTools'}}">
+  <button type="button" data-action="tool" data-tool="select" data-tooltip="" class="avtt-icon-only {{#if (eq tool 'select')}}active{{/if}}"
+          aria-label="{{localize 'AVTT.Pill.Select'}}" aria-pressed="{{#if (eq tool 'select')}}true{{else}}false{{/if}}">
+    <i class="fa-solid fa-expand" inert></i>
+  </button>
+  <button type="button" data-action="tool" data-tool="hand" data-tooltip="" class="avtt-icon-only {{#if (eq tool 'hand')}}active{{/if}}"
+          aria-label="{{localize 'AVTT.Pill.Hand'}}" aria-pressed="{{#if (eq tool 'hand')}}true{{else}}false{{/if}}">
+    <i class="fa-solid fa-hand" inert></i>
+  </button>
+  <button type="button" data-action="tool" data-tool="target" data-tooltip="" class="avtt-icon-only {{#if (eq tool 'target')}}active{{/if}}"
+          aria-label="{{localize 'AVTT.Pill.Target'}}" aria-pressed="{{#if (eq tool 'target')}}true{{else}}false{{/if}}">
+    <i class="fa-solid fa-bullseye" inert></i>
+  </button>
+  <button type="button" data-action="tool" data-tool="ruler" data-tooltip="" class="avtt-icon-only {{#if (eq tool 'ruler')}}active{{/if}}"
+          aria-label="{{localize 'AVTT.Pill.Ruler'}}" aria-pressed="{{#if (eq tool 'ruler')}}true{{else}}false{{/if}}">
+    <i class="fa-solid fa-ruler" inert></i>
+  </button>
+  <button type="button" data-action="zoom" data-direction="1" data-tooltip="" class="avtt-icon-only" aria-label="{{localize 'AVTT.Pill.ZoomIn'}}">
+    <i class="fa-solid fa-magnifying-glass-plus" inert></i>
+  </button>
+  <button type="button" data-action="resetZoom" data-tooltip="" class="avtt-icon-only" aria-label="{{localize 'AVTT.Pill.ResetZoom'}}">
+    <i class="fa-solid fa-magnifying-glass" inert></i>
+  </button>
+  <button type="button" data-action="zoom" data-direction="-1" data-tooltip="" class="avtt-icon-only" aria-label="{{localize 'AVTT.Pill.ZoomOut'}}">
+    <i class="fa-solid fa-magnifying-glass-minus" inert></i>
+  </button>
+  <button type="button" data-action="focusToken" data-tooltip="" class="avtt-icon-only" aria-label="{{localize 'AVTT.Pill.Focus'}}">
+    <i class="fa-solid fa-crosshairs" inert></i>
+  </button>
+  <span class="avtt-pill-spacer"></span>
+  <button type="button" data-action="openSettings" data-tooltip="" class="avtt-icon-only" aria-label="{{localize 'AVTT.Pill.Settings'}}">
+    <i class="fa-solid fa-gears" inert></i>
+  </button>
+</div>
+{{!-- Sections, as the phone's tab bar: each button opens its own panel; one panel is open at a time. --}}
+<nav class="avtt-pill-row avtt-pill-sections {{#unless iconOnly}}labeled{{/unless}}" aria-label="{{localize 'AVTT.Pill.Sections'}}">
+  {{#each sections}}
+  <button type="button" data-action="togglePanel" data-panel="{{id}}" class="{{#if active}}active{{/if}}"
+          aria-label="{{label}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}">
+    <i class="fa-solid {{icon}}" inert></i>{{#unless @root.iconOnly}}<span>{{label}}</span>{{/unless}}
+  </button>
+  {{/each}}
+</nav>
+</div></div>

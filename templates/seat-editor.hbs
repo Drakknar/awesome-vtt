@@ -1,0 +1,41 @@
+<div class="avtt-editor-body">
+  <div class="form-group">
+    <label>{{localize "AVTT.SeatEditor.TableUser"}}</label>
+    <div class="form-fields">
+      <select name="tableUser">
+        <option value="">{{localize "AVTT.SeatEditor.NoTableUser"}}</option>
+        {{#each users}}
+        <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+        {{/each}}
+      </select>
+    </div>
+    <p class="hint">{{localize "AVTT.SeatEditor.TableUserHint"}}</p>
+  </div>
+
+  <div class="avtt-table-diagram">
+    {{#each sides}}
+    <div class="avtt-side avtt-side-{{side}}">
+      {{#each seats}}
+      <fieldset class="avtt-seat-card" data-seat="{{key}}" style="--seat-color: {{color}}">
+        <legend>{{label}}</legend>
+        <select name="seats.{{key}}.actorId" data-seat-actor>
+          <option value="">{{localize "AVTT.SeatEditor.Empty"}}</option>
+          {{#each @root.actors}}
+          <option value="{{id}}" {{#if (eq id ../actorId)}}selected{{/if}}>{{name}}</option>
+          {{/each}}
+        </select>
+        <input type="text" name="seats.{{key}}.playerName" value="{{playerName}}" maxlength="64"
+               placeholder="{{localize 'AVTT.SeatEditor.PlayerName'}}">
+        <div class="avtt-seat-card-row">
+          <input type="color" name="seats.{{key}}.color" value="{{color}}">
+          <button type="button" data-action="clearSeat">
+            <i class="fa-solid fa-xmark"></i> {{localize "AVTT.SeatEditor.Clear"}}
+          </button>
+        </div>
+      </fieldset>
+      {{/each}}
+    </div>
+    {{/each}}
+    <div class="avtt-table-surface"><i class="fa-solid fa-dice-d20"></i><span>{{localize "AVTT.SeatEditor.Screen"}}</span></div>
+  </div>
+</div>

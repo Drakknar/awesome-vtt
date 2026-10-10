@@ -1,0 +1,360 @@
+{
+  "AVTT": {
+    "Settings": {
+      "SeatEditor": {
+        "Name": "Table Seats",
+        "Label": "Configure Seats",
+        "Hint": "Choose the table user and map characters to seats around the table screen."
+      },
+      "SeatPicker": {
+        "Name": "Table seat",
+        "Label": "Choose your seat",
+        "Hint": "Choose where your character sits around the table screen."
+      },
+      "HideCoreUI": {
+        "Name": "Hide standard Foundry UI on the table",
+        "Hint": "Hides the sidebar, hotbar, player list, scene navigation, scene controls and chat pop-ups on the table screen. The seat panels replace them."
+      },
+      "KeepSceneControls": {
+        "Name": "Keep scene controls visible",
+        "Hint": "Shows Foundry's left-hand toolbar on the table even when the standard UI is hidden. Usually not needed: the pill's Ruler button and the R key work while the toolbar is hidden."
+      },
+      "RotateWindows": {
+        "Name": "Rotate windows toward the seat",
+        "Hint": "Windows opened from a seat (roll dialogs, spell-slot and rest dialogs, journals) are rotated and moved toward that player."
+      },
+      "TurnIndicator": {
+        "Name": "Your-turn indicator",
+        "Hint": "Highlights the seat of the character whose turn it is in combat."
+      },
+      "ChatHistory": {
+        "Name": "Chat messages per seat",
+        "Hint": "How many recent chat messages each seat's chat panel shows."
+      },
+      "PhysicalDice": {
+        "Name": "Physical dice",
+        "Hint": "Roll real dice at the table and record the results in Foundry. The system then applies modifiers as usual. The table screen switches to physical dice automatically; other users can pick \"Physical dice (Awesome VTT)\" in Configure Dice.",
+        "Choices": {
+          "off": "Off: Foundry rolls the dice",
+          "player": "The player enters the results",
+          "gm": "The GM enters the results",
+          "both": "The player or the GM (first entry counts)"
+        }
+      },
+      "DiceSoNice": {
+        "Name": "3D dice for Foundry-rolled dice (Dice So Nice)",
+        "Hint": "While physical dice are on, dice that Foundry rolls instead (\"Let Foundry roll\", or dice left empty) are shown as Dice So Nice 3D dice. Dice entered by hand follow Dice So Nice's \"Disabled for manually entered rolls\" setting. Needs Dice So Nice; has no effect without it."
+      },
+      "UIScale": {
+        "Name": "Table UI scale",
+        "Hint": "Size of the seat panels on this screen. Adjust until the text is comfortable to read from a chair."
+      },
+      "FoldPill": {
+        "Name": "Fold pill rows",
+        "Hint": "Show only the character row of each pill. The map tools and the section buttons open below it when the pointer comes near the pill, and stay open while one of its panels is open."
+      },
+      "IconOnlyButtons": {
+        "Name": "Icon-only pill buttons",
+        "Hint": "Show only icons on the Sheet and Chat & Dice buttons of each character pill. The map tools are always icon-only. On narrow seats the labels are hidden automatically so the buttons stay on one line."
+      },
+      "KeepAwake": {
+        "Name": "Keep the screen on",
+        "Hint": "Stops this screen from dimming or sleeping while the table is open. Needs HTTPS and a supporting browser."
+      },
+      "IdleOpacity": {
+        "Name": "Idle pill opacity",
+        "Hint": "How visible pills and the initiative strip are when the mouse is not over them. Lower values show more of the map. Open panels are always fully opaque."
+      },
+      "UseChecks": {
+        "Name": "Check actions before use",
+        "Hint": "When an action from a seat needs a target, a spell slot or uses that are missing, stop and say so in that seat, before any dialog opens."
+      },
+      "AutoRoll": {
+        "Name": "Roll follow-up dice automatically",
+        "Hint": "After an attack roll, roll its damage (hit or miss; critical damage on a critical hit); after a saving-throw action, roll its damage; after a utility action, roll its formula, as the chat card's buttons would. Damage and healing actions already roll by themselves."
+      },
+      "RollNotices": {
+        "Name": "Show roll results",
+        "Hint": "Show the result of each roll made at the table (checks, saves, attacks, damage, healing, the dice pool) in the seat of the character who rolled it, with physical or Foundry dice, once Dice So Nice has finished. Pass or fail against a DC shows unless dnd5e hides challenge results from players; hit or miss shows if dnd5e shows attack results to players. Blind rolls are not shown. Click the notice to dismiss it."
+      },
+      "AutoDeathSaves": {
+        "Name": "Prompt for death saves",
+        "Hint": "At the start of a seated character's turn in combat, if they are at 0 HP and neither stable nor dead, ask for the death saving throw in their seat."
+      },
+      "AutoConcentration": {
+        "Name": "Prompt for concentration checks",
+        "Hint": "When a seated character who is concentrating takes damage, ask for the Constitution saving throw in their seat, with the DC dnd5e works out."
+      },
+      "AutoSaves": {
+        "Name": "Prompt for saving throws",
+        "Hint": "When a spell or ability that calls for a saving throw targets a seated character, ask for the save in their seat, with its DC."
+      },
+      "AutoRequests": {
+        "Name": "Prompt for GM requests",
+        "Hint": "When the GM requests a group rest, save or check (D&D 5e) or a challenge roll (Shadow of the Demon Lord) from a seated character, ask in their seat."
+      },
+      "AutoInitiative": {
+        "Name": "Prompt for initiative",
+        "Hint": "When a seated character is in the active encounter without initiative, ask in their seat (in Shadow of the Demon Lord: a fast or slow turn)."
+      },
+      "CloseOtherPanels": {
+        "Name": "Close other seats' panels",
+        "Hint": "Opening a panel in one seat closes the panels open in the other seats."
+      }
+    },
+    "SeatEditor": {
+      "Title": "Table Seats",
+      "TableUser": "Table user",
+      "NoTableUser": "— None (table mode off) —",
+      "TableUserHint": "The non-GM user logged in on the table screen. Seated characters are given Owner permission for this user; permissions are reverted when a seat is cleared.",
+      "Empty": "— Empty —",
+      "PlayerName": "Player name (optional)",
+      "Clear": "Clear",
+      "Screen": "Table screen",
+      "Save": "Save seats",
+      "Saved": "Table seats saved.",
+      "InvalidUser": "The table user must be an existing non-GM user."
+    },
+    "SeatMove": {
+      "Title": "Table seat",
+      "Hint": "Choose where each of your characters sits around the table screen. Picking a taken seat swaps the two characters; a character that isn't seated yet can only take a free seat.",
+      "NotSeated": "— Not at the table —",
+      "NoCharacters": "You don't own a character.",
+      "NoGM": "A GM must be logged in to change seats."
+    },
+    "Seat": {
+      "bottom-left": "Bottom left",
+      "bottom-center": "Bottom center",
+      "bottom-right": "Bottom right",
+      "top-left": "Top left",
+      "top-center": "Top center",
+      "top-right": "Top right",
+      "left-top": "Left top",
+      "left-center": "Left center",
+      "left-bottom": "Left bottom",
+      "right-top": "Right top",
+      "right-center": "Right center",
+      "right-bottom": "Right bottom"
+    },
+    "Pill": {
+      "Focus": "My token",
+      "Ruler": "Ruler",
+      "MissingActor": "This seat's character no longer exists.",
+      "NotOwner": "The table user does not own this character. Re-save the seats as GM.",
+      "NoToken": "This character has no token on the current scene.",
+      "RulerHint": "Ruler tool not found. Press R to toggle the ruler.",
+      "Settings": "Settings",
+      "MapTools": "Map tools",
+      "Select": "Select",
+      "Hand": "Move the map",
+      "ZoomIn": "Zoom in",
+      "ResetZoom": "Reset zoom (100%)",
+      "ZoomOut": "Zoom out",
+      "Target": "Target",
+      "Quick": "Quick actions",
+      "Sections": "Sections",
+      "AdvShort": {
+        "adv": "ADV",
+        "dis": "DIS"
+      },
+      "LevelUp": "Level up",
+      "LevelUpReady": "Level up (enough XP for the next level)",
+      "Favorites": "Favorites",
+      "UseFavorite": "Use {name}",
+      "FavoritesHint": "Star actions or items in the sheet to add them here."
+    },
+    "Sheet": {
+      "Tab": {
+        "actions": "Actions",
+        "skills": "Skills",
+        "spells": "Spells",
+        "abilities": "Abilities",
+        "inventory": "Inventory",
+        "status": "Status"
+      },
+      "Level": "Level",
+      "Normal": "Normal",
+      "Advantage": "Advantage",
+      "Disadvantage": "Disadvantage",
+      "Slots": "Slots",
+      "NoActions": "Nothing to use.",
+      "Check": "Check",
+      "Save": "Save",
+      "Inspiration": "Inspiration",
+      "ShortRest": "Short rest",
+      "LongRest": "Long rest",
+      "DeathSaves": "Death saves",
+      "RollDeathSave": "Roll death save",
+      "Conditions": "Conditions",
+      "Apply": "Apply",
+      "SlotLess": "One slot less",
+      "SlotMore": "One slot more",
+      "UseLess": "One use less",
+      "UseMore": "One use more",
+      "FullSheet": "Open full sheet",
+      "About": "What {name} does",
+      "Favorite": "Add {name} to favorites",
+      "Unfavorite": "Remove {name} from favorites"
+    },
+    "Utility": {
+      "Chat": {
+        "all": "All",
+        "mine": "Mine",
+        "Placeholder": "Message, or a command such as /r 1d20",
+        "Send": "Send"
+      },
+      "Dice": {
+        "Modifier": "Modifier",
+        "Empty": "Click dice to build a roll",
+        "Clear": "Clear",
+        "Roll": "Roll",
+        "Flavor": "Table roll",
+        "Physical": "Real dice",
+        "Digital": "Foundry rolls",
+        "EnterResults": "Enter results",
+        "RemoveOne": "Remove one {die}",
+        "AddOne": "Add one {die}",
+        "NextRoll": "Next roll"
+      },
+      "Compendium": {
+        "Placeholder": "Search or browse items, spells, rules…",
+        "Searching": "Searching…",
+        "NoResults": "No results.",
+        "Back": "Back",
+        "Open": "Open",
+        "Search": "Search",
+        "TypeMore": "Type at least 2 characters to search.",
+        "Clear": "Clear search",
+        "Path": "Compendium path",
+        "All": "Compendiums",
+        "Empty": "This folder is empty.",
+        "More": "Show more",
+        "None": "No compendiums available."
+      }
+    },
+    "Initiative": {
+      "Round": "Round",
+      "NotStarted": "Combat not started",
+      "Roll": "Roll initiative",
+      "EndTurn": "End turn"
+    },
+    "Turn": {
+      "Banner": "Your turn, {name}!"
+    },
+    "Dice": {
+      "Method": "Physical dice (Awesome VTT)",
+      "Title": "Enter your dice",
+      "GMTitle": "Enter table dice",
+      "WaitingForGM": "Waiting for the GM to enter the results…",
+      "GMCanEnter": "The GM can also enter these results.",
+      "EmptyIsDigital": "Dice left empty are rolled by Foundry.",
+      "Clear": "Clear",
+      "Confirm": "Confirm",
+      "RollDigitally": "Let Foundry roll instead",
+      "Send": "Send results",
+      "Tens": "Tens",
+      "Units": "Units",
+      "Extra": "reroll / extra die",
+      "AllEntered": "All dice of this type already have a result. Use Clear to change them.",
+      "Incomplete": "Enter a valid result for every die.",
+      "GMDigital": "Let Foundry roll"
+    },
+    "Inventory": {
+      "Currency": "Currency",
+      "Weight": "Weight",
+      "Attunement": "Attuned items",
+      "Empty": "No items.",
+      "Less": "Remove one",
+      "More": "Add one",
+      "Equipped": "Equipped",
+      "Attuned": "Attuned",
+      "Use": "Use",
+      "NoDescription": "No description.",
+      "ToParty": "Give to the party"
+    },
+    "Journal": {
+      "Shared": "Recently shared",
+      "Placeholder": "Filter journals…",
+      "None": "No journals available.",
+      "Back": "Back",
+      "OpenFull": "Open full journal",
+      "External": "This page type opens in the full journal.",
+      "NoPages": "No pages you can view.",
+      "Untitled": "Shared image"
+    },
+    "Checks": {
+      "NoTarget": "Choose a target first",
+      "NoTargetHint": "{name}: press the Target button on your pill (hover over the pill to show it), then click the token. Click it again to untarget. Targets are cleared after each action.",
+      "NoSlot": "No spell slots left",
+      "NoSlotHint": "{name} needs a level {level} slot or higher.",
+      "NoUses": "No uses left",
+      "NoUsesHint": "{name}: {value} left, needs {cost}."
+    },
+    "Notice": {
+      "Damage": "damage",
+      "Healing": "healing",
+      "Critical": "Critical",
+      "Fumble": "Fumble",
+      "Success": "Pass",
+      "Failure": "Fail",
+      "Hit": "Hit",
+      "Miss": "Miss",
+      "HitCount": "{hit} hit, {miss} missed",
+      "Dismiss": "Click to dismiss.",
+      "RollDamage": "Roll damage"
+    },
+    "Quick": {
+      "Title": "Quick actions",
+      "Amount": "Amount",
+      "HpMode": "Damage, healing or temporary HP",
+      "Hp": {
+        "damage": "Damage",
+        "heal": "Heal",
+        "temp": "Temp"
+      },
+      "EndConcentration": "End",
+      "Exhaustion": "Exhaustion",
+      "ExhaustionLess": "One level less",
+      "ExhaustionMore": "One level more",
+      "Effects": "Effects",
+      "Tab": {
+        "quick": "Quick actions",
+        "effects": "Damage & effects",
+        "rest": "Rest"
+      },
+      "NoEffects": "Nothing to switch on or off right now. Effects such as Rage, Bladesong, or an item's or spell's toggleable effect appear here.",
+      "Less": "One less {name}",
+      "More": "One more {name}"
+    },
+    "Prompt": {
+      "Later": "Not now",
+      "Successes": "Successes",
+      "Failures": "Failures",
+      "More": "{count} more waiting"
+    },
+    "Sections": {
+      "character": "Character",
+      "dice": "Dice",
+      "chat": "Chat",
+      "journal": "Journal",
+      "compendium": "Compendium",
+      "party": "Party"
+    },
+    "Spells": {
+      "None": "No spells.",
+      "Prepare": "Prepare {name}",
+      "Unprepare": "Unprepare {name}",
+      "Always": "Always prepared",
+      "Concentration": "Concentration",
+      "Ritual": "Ritual"
+    },
+    "Keypad": {
+      "pad": "Number pad",
+      "clear": "Clear",
+      "back": "Delete the last digit",
+      "less": "One less (hold to repeat)",
+      "more": "One more (hold to repeat)",
+      "done": "OK"
+    }
+  }
+}

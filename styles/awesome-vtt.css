@@ -1,0 +1,686 @@
+/* ============================================================
+   Awesome VTT – In-Person Table Mode
+   ============================================================ */
+
+:root {
+  --avtt-bg: rgba(18, 18, 24, 0.82);
+  --avtt-bg-solid: #16161d;
+  --avtt-bg-raised: rgba(255, 255, 255, 0.08);
+  --avtt-bg-hover: rgba(255, 255, 255, 0.16);
+  --avtt-border: rgba(255, 255, 255, 0.18);
+  --avtt-text: #f1f1f4;
+  --avtt-muted: #a8a8b3;
+  --avtt-hp: #3fb950;
+  --avtt-temp: #58a6ff;
+  --avtt-hp-low: #d73a49;
+  --avtt-temp: #58a6ff;
+  --avtt-adv: #3fb950;
+  --avtt-dis: #f85149;
+  --avtt-radius: 0.6em;
+}
+
+/* ---------- Core UI hiding ---------- */
+
+.avtt-core-hidden { display: none !important; }
+body.avtt-hide-ui #chat-notifications { display: none !important; }
+
+/* ---------- Overlay and seats ---------- */
+
+#avtt-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* Above the canvas; below application windows so dialogs opened from a seat stay on top. */
+  z-index: 50;
+  --avtt-scale: 1;
+  --avtt-idle-opacity: 0.55;
+}
+
+.avtt-seat {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4em;
+  max-height: var(--seat-depth, 50vh);
+  padding: 0 0.5em;
+  box-sizing: border-box;
+  font-size: calc(14px * var(--avtt-scale));
+  color: var(--avtt-text);
+  /* Rotate around the edge anchor, then hang the seat "above" it in its own frame. */
+  transform-origin: 0 0;
+  transform: rotate(var(--seat-rotation, 0deg)) translate(-50%, -100%);
+  pointer-events: none;
+}
+.avtt-seat.avtt-front { z-index: 1; }
+
+.avtt-seat > *:not([hidden]),
+.avtt-drawers > .avtt-panel:not([hidden]) { pointer-events: auto; }
+.avtt-seat .avtt-drawers, .avtt-seat .avtt-turn-banner { pointer-events: none; }
+.avtt-seat [hidden] { display: none !important; }
+
+.avtt-seat button {
+  font: inherit;
+  color: inherit;
+  background: var(--avtt-bg-raised);
+  border: 1px solid var(--avtt-border);
+  border-radius: 0.4em;
+  padding: 0.25em 0.55em;
+  line-height: 1.3;
+  cursor: pointer;
+  width: auto;
+}
+.avtt-seat button:hover { background: var(--avtt-bg-hover); }
+/* Core draws a glow on focused buttons, which looks like a selection. Keep a ring for keyboard focus only. */
+.avtt-seat button:focus { box-shadow: none; outline: none; }
+.avtt-seat button:focus-visible { outline: 2px solid var(--seat-color); outline-offset: 1px; }
+.avtt-seat button.active { background: var(--seat-color); border-color: var(--seat-color); color: var(--seat-ink, #111); }
+/* Filled buttons keep their fill on hover and just brighten, so the dark text stays readable. */
+.avtt-seat button.active:hover { background: var(--seat-color); filter: brightness(1.15); }
+.avtt-seat button:disabled { opacity: 0.4; cursor: default; }
+.avtt-seat input {
+  font: inherit;
+  color: inherit;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--avtt-border);
+  border-radius: 0.4em;
+  padding: 0.2em 0.4em;
+  height: auto;
+}
+.avtt-muted { color: var(--avtt-muted); font-size: 0.9em; }
+
+/* ---------- Idle transparency ---------- */
+
+/* Pills and the initiative strip fade while not in use, so the map and tokens underneath stay visible.
+   Open panels don't: a player using one reads it fully opaque, on a solid background (user's decision, 2026-10-04). */
+.avtt-pill, .avtt-initiative {
+  opacity: var(--avtt-idle-opacity);
+  transition: opacity 150ms ease;
+}
+.avtt-pill:is(:hover, :focus-within),
+.avtt-initiative:is(:hover, :focus-within) { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .avtt-pill, .avtt-initiative { transition: none; }
+}
+
+/* ---------- Pill ---------- */
+
+.avtt-pill {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* Set per pill by the overlay's fitting (see table/fit.mjs); may exceed the seat's third of the edge. */
+  width: var(--avtt-pill-width, min(100%, 28em));
+  flex: none;
+  padding: 0.5em 0.7em;
+  background: var(--avtt-bg);
+  border: 2px solid var(--seat-color);
+  border-bottom: none;
+  border-radius: 1.4em 1.4em 0 0;
+  backdrop-filter: blur(4px);
+  box-sizing: border-box;
+}
+.avtt-pill-body { display: flex; gap: 0.6em; align-items: center; }
+.avtt-portrait {
+  width: 3.4em; height: 3.4em;
+  border-radius: 50%;
+  border: 2px solid var(--seat-color);
+  object-fit: cover;
+  flex: none;
+}
+.avtt-pill-body.dying .avtt-portrait { filter: grayscale(1); border-color: var(--avtt-hp-low); }
+.avtt-pill-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2em; }
+.avtt-pill-name { display: flex; gap: 0.5em; align-items: baseline; white-space: nowrap; overflow: hidden; }
+.avtt-pill-name strong { overflow: hidden; text-overflow: ellipsis; }
+.avtt-player { color: var(--avtt-muted); font-size: 0.85em; }
+.avtt-hp-bar {
+  position: relative;
+  height: 1.2em;
+  border-radius: 0.6em;
+  background: linear-gradient(to right, var(--avtt-hp) var(--hp-pct), rgba(255, 255, 255, 0.1) var(--hp-pct));
+  font-size: 0.85em;
+  text-align: center;
+  line-height: 1.2em;
+  text-shadow: 0 0 3px #000;
+}
+.avtt-hp-bar em { color: var(--avtt-temp); font-style: normal; }
+.avtt-pill-stats { display: flex; gap: 0.7em; align-items: center; font-size: 0.9em; flex-wrap: wrap; }
+.avtt-inspired { color: gold; }
+.avtt-condition-icon { width: 1.3em; height: 1.3em; border: none; }
+.avtt-warning { color: var(--avtt-dis); font-size: 0.8em; }
+/* Below the player pill, divided by separators: map tools and options, then the sections (the phone's tab bar). */
+.avtt-pill-more { display: grid; grid-template-rows: 1fr; }
+/* The small inline padding keeps the buttons' focus outlines inside the clipped area. The space above the rows is
+   the first row's margin, not padding, so it folds away with them. */
+.avtt-pill-more-rows { min-height: 0; display: flex; flex-direction: column; gap: 0.35em; padding-inline: 3px; margin-inline: -3px; }
+.avtt-pill-more-rows > :first-child { margin-top: 0.35em; }
+/* "Fold pill rows" setting: only the player pill shows until the pointer comes near (a band just above the pill,
+   the pill itself, or any of the seat's controls), a panel is open, or a keyboard user tabs in. The rows then open
+   below the player pill; they fold again shortly after the pointer leaves. The pill's depth used to keep the
+   corners free is always the unfolded one (Seat#pillDepth), so a corner pill never unfolds into its neighbour. */
+.avtt-fold .avtt-pill::before { content: ""; position: absolute; inset-inline: 0; bottom: 100%; height: 0.8em; }
+.avtt-fold .avtt-pill-more { grid-template-rows: 0fr; transition: grid-template-rows 150ms ease 350ms; }
+.avtt-fold .avtt-pill-more-rows { overflow: hidden; }
+.avtt-fold:is(:hover, .avtt-panel-open, :has(:focus-visible)) .avtt-pill-more { grid-template-rows: 1fr; transition-delay: 0s; }
+/* A small handle shows there is more while folded. */
+.avtt-fold .avtt-pill::after {
+  content: ""; position: absolute; left: 50%; bottom: 0.2em; translate: -50% 0;
+  width: 2.5em; height: 0.2em; border-radius: 0.1em; background: var(--seat-color); opacity: 0.7;
+  transition: opacity 150ms ease 350ms;
+}
+.avtt-fold:is(:hover, .avtt-panel-open, :has(:focus-visible)) .avtt-pill::after { opacity: 0; transition-delay: 0s; }
+@media (prefers-reduced-motion: reduce) {
+  .avtt-fold .avtt-pill-more { transition-duration: 0s; }
+  .avtt-fold .avtt-pill::after { transition-duration: 0s; }
+}
+.avtt-pill-row { --avtt-pill-space: 0.3em; display: flex; gap: var(--avtt-pill-space); flex-wrap: nowrap; align-items: stretch;
+  padding-top: 0.35em; border-top: 1px solid var(--avtt-border); }
+.avtt-pill-row button {
+  display: flex; gap: 0.3em; align-items: center; justify-content: center;
+  min-width: 0;
+  padding: 0.35em 0.45em;
+  font-size: 1em;
+  white-space: nowrap;
+}
+.avtt-pill-row button.avtt-icon-only { flex: 0 0 auto; width: 2.1em; padding-inline: 0; }
+.avtt-pill-spacer { flex: 1; }
+/* Sections: equal-width buttons with the icon above a small label, as on the phone. Core gives buttons a fixed
+   height (--button-size), which would squeeze the label out of sight, so the height follows the content here. */
+.avtt-pill-sections button { flex: 1 1 0; flex-direction: column; gap: 0.15em; padding: 0.3em 0.2em; height: auto; min-height: 2.1em; }
+/* The label stretches across the button instead of using a percentage max-width: a percentage made the natural
+   width measured by the pill fitting grow with the button's current width (see Seat#measurePillNeed). */
+.avtt-pill-sections button span { display: block; align-self: stretch; min-width: 0; text-align: center; font-size: 0.75em; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; }
+/* Only when an edge can't fit its pills at full width (see TableOverlay#fitPills) do the labels give way to icons. */
+.avtt-pill-sections.compact button span { display: none; }
+/* Player pill: quick actions and the armed advantage chip, at its right; Level up in the character panel's header. */
+.avtt-seat :is(.avtt-pill-round, .avtt-sheet-levelup) {
+  flex: none;
+  display: flex; align-items: center; justify-content: center;
+  width: 2.2em; height: 2.2em; min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+}
+.avtt-seat .avtt-pill-quick { width: 2.4em; height: 2.4em; border: 2px solid var(--seat-color); font-size: 1.1em; }
+/* Enough XP for the next level. */
+.avtt-seat .avtt-level-ready { border-color: gold; color: gold; box-shadow: 0 0 0.5em gold; }
+.avtt-seat .avtt-roll-chip {
+  flex: none;
+  width: auto; height: auto; min-height: 0;
+  padding: 0.15em 0.55em;
+  border: none;
+  border-radius: 1em;
+  font-size: 0.8em; font-weight: bold;
+  color: #111;
+}
+.avtt-seat .avtt-roll-adv, .avtt-seat .avtt-roll-adv:hover { background: var(--avtt-adv); }
+.avtt-seat .avtt-roll-dis, .avtt-seat .avtt-roll-dis:hover { background: var(--avtt-dis); }
+.avtt-pill-missing { padding: 0.5em; color: var(--avtt-muted); }
+
+/* Hand mode: the map shows a grab cursor, and a grabbing one while dragging. */
+body.avtt-hand-mode #board { cursor: grab; }
+body.avtt-hand-mode.avtt-panning #board { cursor: grabbing; }
+
+/* ---------- Initiative strip ---------- */
+
+.avtt-initiative {
+  width: min(100%, 28em);
+  padding: 0.3em 0.5em;
+  background: var(--avtt-bg);
+  border: 1px solid var(--avtt-border);
+  border-radius: var(--avtt-radius);
+  box-sizing: border-box;
+  font-size: 0.9em;
+}
+.avtt-init-header { display: flex; gap: 0.3em; align-items: center; }
+.avtt-init-toggle { flex: 1; display: flex; gap: 0.4em; align-items: center; justify-content: space-between; }
+.avtt-end-turn { background: var(--seat-color) !important; color: var(--seat-ink, #111) !important; font-weight: bold; }
+.avtt-init-list { display: flex; gap: 0.3em; list-style: none; margin: 0.3em 0 0; padding: 0; overflow-x: auto; }
+.avtt-init-list li {
+  flex: none;
+  display: flex; flex-direction: column; align-items: center;
+  width: 3.6em; padding: 0.2em;
+  border-radius: 0.4em;
+  border: 1px solid transparent;
+  font-size: 0.8em;
+}
+.avtt-init-list li img { width: 2.4em; height: 2.4em; border-radius: 50%; object-fit: cover; border: none; }
+.avtt-init-list li.current { border-color: gold; background: rgba(255, 215, 0, 0.15); }
+.avtt-init-list li.mine img { outline: 2px solid var(--seat-color); }
+.avtt-init-list li.defeated { opacity: 0.4; }
+.avtt-init-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avtt-init-value { font-weight: bold; }
+
+/* ---------- Drawers ---------- */
+
+.avtt-drawers {
+  display: flex;
+  gap: 0.5em;
+  align-items: flex-end;
+  justify-content: center;
+  width: max-content;
+  min-height: 0;
+  flex: 0 1 auto;
+}
+.avtt-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  width: 24em;
+  /* Room left above the pill (three rows), the notices and the initiative strip. */
+  max-height: calc(var(--seat-depth, 50vh) - 15em);
+  padding: 0.6em;
+  background: var(--avtt-bg-solid);
+  border: 1px solid var(--seat-color);
+  border-radius: var(--avtt-radius);
+  backdrop-filter: blur(4px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.avtt-tabs { display: flex; gap: 0.25em; flex: none; }
+.avtt-tabs button { flex: 1; font-size: 0.9em; }
+.avtt-button-row { display: flex; gap: 0.3em; align-items: center; flex-wrap: wrap; }
+.avtt-primary { background: var(--seat-color) !important; color: var(--seat-ink, #111) !important; font-weight: bold; }
+
+/* Section separators */
+.avtt-sheet > .avtt-sheet-header {
+  padding-bottom: 0.5em;
+  margin-bottom: 0.1em;
+  border-bottom: 1px solid var(--avtt-border);
+}
+
+/* Sheet */
+.avtt-sheet-header { display: flex; gap: 0.4em; align-items: center; flex: none; }
+.avtt-sheet-header > div { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.avtt-seat .avtt-adv-adv.selected { background: var(--avtt-adv); color: #111; font-weight: bold; }
+.avtt-seat .avtt-adv-dis.selected { background: var(--avtt-dis); color: #111; font-weight: bold; }
+.avtt-hp-row { display: flex; gap: 0.3em; align-items: center; flex: none; }
+.avtt-hp-row input { width: 4em; }
+.avtt-segmented { display: flex; flex: none; }
+.avtt-segmented button { border-radius: 0; }
+.avtt-segmented button:first-child { border-radius: 0.4em 0 0 0.4em; }
+.avtt-segmented button:last-child { border-radius: 0 0.4em 0.4em 0; border-left: none; }
+.avtt-damage { border-color: var(--avtt-dis) !important; }
+.avtt-heal { border-color: var(--avtt-adv) !important; }
+.avtt-seat .avtt-damage.selected { background: var(--avtt-dis); color: #111; font-weight: bold; }
+.avtt-seat .avtt-heal.selected { background: var(--avtt-adv); color: #111; font-weight: bold; }
+.avtt-seat .avtt-segmented button.selected:hover { filter: brightness(1.15); }
+.avtt-seat .avtt-damage:not(.selected):hover { background: color-mix(in srgb, var(--avtt-dis) 25%, transparent); }
+.avtt-seat .avtt-heal:not(.selected):hover { background: color-mix(in srgb, var(--avtt-adv) 25%, transparent); }
+.avtt-apply { flex: none; }
+.avtt-sheet-body { overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 0.5em; }
+.avtt-group h4 {
+  display: flex; justify-content: space-between;
+  margin: 0 0 0.3em; padding-bottom: 0.15em;
+  border-bottom: 1px solid var(--avtt-border);
+  font-size: 0.95em; color: var(--seat-color);
+}
+.avtt-slots { color: var(--avtt-text); font-weight: normal; }
+/* − n/max + controls for spell slots and item uses (to undo an accidental use). */
+.avtt-adjust { display: inline-flex; gap: 0.25em; align-items: center; flex: none; }
+.avtt-adjust > span { min-width: 2.4em; text-align: center; }
+.avtt-seat .avtt-adjust button { padding: 0 0.45em; line-height: 1.2; }
+.avtt-group h4 { align-items: center; }
+.avtt-item-row { display: flex; flex-wrap: wrap; gap: 0.3em; align-items: center; }
+.avtt-item-row > button { flex: 1; min-width: 0; }
+.avtt-item-list .avtt-item-info { flex: none; width: auto; }
+.avtt-item-row > .avtt-item-details { flex: 1 0 100%; margin: 0 0 0.2em; }
+.avtt-item-list, .avtt-skill-list, .avtt-comp-results { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.2em; }
+.avtt-item-list button, .avtt-skill-list button, .avtt-comp-results button {
+  width: 100%; display: flex; gap: 0.5em; align-items: center; text-align: left;
+}
+.avtt-item-list img, .avtt-comp-results img { width: 1.8em; height: 1.8em; border: none; flex: none; }
+.avtt-item-list span, .avtt-skill-list span, .avtt-comp-results span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avtt-item-list em, .avtt-skill-list em, .avtt-comp-results em { color: var(--avtt-muted); font-size: 0.85em; }
+.avtt-skill-list button.proficient span::before,
+.avtt-ability button.proficient::before { content: "● "; color: var(--seat-color); }
+.avtt-ability-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4em; }
+.avtt-ability {
+  display: flex; flex-direction: column; align-items: stretch; gap: 0.2em;
+  padding: 0.3em; border: 1px solid var(--avtt-border); border-radius: 0.4em; text-align: center;
+}
+.avtt-ability-abbr { color: var(--avtt-muted); font-size: 0.8em; }
+.avtt-ability-score { font-size: 1.3em; font-weight: bold; }
+.avtt-ability button { font-size: 0.85em; }
+.avtt-death { display: flex; gap: 0.5em; align-items: center; margin-top: 0.4em; }
+.avtt-condition-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.25em; }
+.avtt-condition-grid button { display: flex; gap: 0.3em; align-items: center; text-align: left; font-size: 0.85em; }
+.avtt-condition-grid img { width: 1.3em; height: 1.3em; border: none; }
+
+/* Inventory */
+.avtt-currency-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.25em; }
+.avtt-coin { display: flex; flex-direction: column; align-items: center; gap: 0.1em; font-size: 0.8em; }
+.avtt-coin img { width: 1.4em; height: 1.4em; border: none; }
+.avtt-coin input { width: 100%; text-align: center; box-sizing: border-box; }
+.avtt-meter { height: 0.4em; margin-top: 0.3em; border-radius: 0.2em; background: linear-gradient(to right, var(--seat-color) var(--pct), rgba(255, 255, 255, 0.1) var(--pct)); }
+.avtt-meter.over { background: linear-gradient(to right, var(--avtt-dis) var(--pct), rgba(255, 255, 255, 0.1) var(--pct)); }
+.avtt-inventory-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.2em; }
+.avtt-inv-contents { margin: 0.2em 0 0 1.2em; }
+.avtt-inv-row { display: flex; gap: 0.2em; align-items: center; }
+.avtt-inv-name { flex: 1; min-width: 0; display: flex; gap: 0.5em; align-items: center; text-align: left; }
+.avtt-inv-name img { width: 1.8em; height: 1.8em; border: none; flex: none; }
+.avtt-inv-name span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avtt-inv-name em { color: var(--avtt-muted); font-size: 0.85em; font-style: normal; }
+.avtt-inv-qty { display: flex; align-items: center; gap: 0.15em; flex: none; }
+.avtt-inv-qty span { min-width: 1.6em; text-align: center; }
+.avtt-inv-qty button { padding-inline: 0.45em; }
+.avtt-inv-details { margin: 0.2em 0 0.3em; padding: 0.4em; font-size: 0.85em; background: rgba(0, 0, 0, 0.3); border-radius: 0.4em; }
+.avtt-inv-details img { max-width: 100%; }
+
+/* Journal */
+.avtt-journal-entry h3 { margin: 0.3em 0; }
+.avtt-journal-pages { display: flex; flex-wrap: wrap; gap: 0.25em; margin-bottom: 0.3em; }
+.avtt-journal-pages button { font-size: 0.85em; }
+.avtt-journal-content { font-size: 0.9em; margin: 0; }
+.avtt-journal-content img { max-width: 100%; height: auto; border: none; }
+.avtt-journal-content figcaption { color: var(--avtt-muted); font-size: 0.85em; text-align: center; }
+.avtt-comp-results i { width: 1.4em; text-align: center; flex: none; }
+
+/* Utility */
+.avtt-panel.avtt-util-body { width: 22em; }
+.avtt-util-body { flex: 1 1 auto; display: flex; flex-direction: column; gap: 0.4em; min-height: 0; overflow-y: auto; }
+.avtt-util-body[data-body="chat"] { overflow: hidden; }
+.avtt-chat-filter { display: flex; gap: 0.25em; flex: none; }
+.avtt-chat-filter button { flex: 1; font-size: 0.85em; }
+.avtt-chat-log { flex: 1 1 auto; list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 0.3em; }
+.avtt-chat-log > .chat-message { font-size: 0.85em; }
+.avtt-chat-log .chat-message { margin: 0; }
+/* Foundry's own message styling (dark text for a light card) is all other systems get: dnd5e restyles messages for the
+   dark theme, SotDL doesn't, so its rolls and cards came out dark on dark. They get the light card core intends. */
+body:not([data-avtt-system="dnd5e"]) .avtt-chat-log .chat-message {
+  background: #ebe6da; color: #191813; border-color: #6f6c66;
+}
+body:not([data-avtt-system="dnd5e"]) .avtt-chat-log .chat-message .message-header { color: #4b4a44; }
+/* Dice pool: two per row, each − label + */
+.avtt-dice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.3em; }
+.avtt-die {
+  display: flex; align-items: center; gap: 0.25em;
+  padding: 0.2em; border: 1px solid var(--avtt-border); border-radius: 0.4em;
+}
+.avtt-die.active { border-color: var(--seat-color); }
+.avtt-die-label { flex: 1; display: flex; gap: 0.3em; align-items: baseline; justify-content: center; }
+.avtt-die-label em { font-style: normal; font-size: 0.85em; color: var(--avtt-muted); }
+.avtt-die.active .avtt-die-label em { color: var(--seat-color); }
+.avtt-seat .avtt-die button { width: 1.9em; padding: 0.15em 0; font-weight: bold; }
+/* Sections of the dice panel, divided by a line with a little padding. */
+.avtt-util-body[data-body="dice"] { gap: 0.5em; overflow: hidden; }
+/* The dice panel may be a little taller than the others (3em more), so its choices fit without scrolling at the
+   usual seat depth. The seat column still shrinks its panels when there is less room. */
+.avtt-panel.avtt-util-body[data-body="dice"] { max-height: calc(var(--seat-depth, 50vh) - 12em); }
+/* Only the choices scroll; the formula and the Roll button always show at the bottom. */
+.avtt-dice-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5em; }
+.avtt-dice-footer { flex: none; display: flex; flex-direction: column; gap: 0.5em; }
+.avtt-dice-next { display: flex; gap: 0.5em; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.avtt-dice-scroll > * + *, .avtt-dice-footer { border-top: 1px solid var(--avtt-border); padding-top: 0.5em; }
+.avtt-dice-mod { flex: 1; text-align: center; }
+.avtt-dice-source button { flex: 1; }
+.avtt-dice-formula {
+  padding: 0.4em; text-align: center; font-family: monospace; font-size: 1.1em;
+  background: rgba(0, 0, 0, 0.35); border-radius: 0.4em;
+}
+.avtt-comp-search { display: flex; gap: 0.3em; }
+.avtt-comp-search input { flex: 1; min-width: 0; }
+.avtt-comp-crumbs { display: flex; flex-wrap: wrap; gap: 0.25em; align-items: center; }
+.avtt-comp-crumbs button { font-size: 0.85em; }
+.avtt-comp-crumbs span { color: var(--avtt-muted); }
+.avtt-comp-more { align-self: center; }
+.avtt-comp-entry h3 { display: flex; gap: 0.4em; align-items: center; margin: 0.3em 0; }
+.avtt-comp-entry h3 img { width: 2em; height: 2em; border: none; }
+.avtt-comp-content { font-size: 0.9em; }
+.avtt-comp-content img { max-width: 100%; }
+
+/* ---------- Your-turn indicator ---------- */
+
+.avtt-turn-banner {
+  display: none;
+  padding: 0.3em 1em;
+  border-radius: 1em;
+  background: var(--seat-color);
+  color: #111;
+  font-weight: bold;
+  font-size: 1.2em;
+  box-shadow: 0 0 1em var(--seat-color);
+  animation: avtt-bounce 1.2s ease-in-out infinite;
+}
+.avtt-active-turn .avtt-turn-banner { display: block; }
+
+/* Quick actions panel (the phone's launcher) */
+.avtt-quick { width: 25em; }
+.avtt-panel-header { display: flex; gap: 0.4em; align-items: center; justify-content: space-between; flex: none;
+  padding-bottom: 0.4em; border-bottom: 1px solid var(--avtt-border); }
+.avtt-quick-body { display: flex; flex-direction: column; gap: 0.5em; min-height: 0; overflow-y: auto; }
+.avtt-quick-body > * + * { padding-top: 0.5em; border-top: 1px solid var(--avtt-border); }
+.avtt-quick-line { display: flex; gap: 0.4em; align-items: center; justify-content: space-between; }
+.avtt-quick-chips { display: flex; gap: 0.3em; flex-wrap: wrap; }
+.avtt-quick-chips button { display: flex; gap: 0.3em; align-items: center; font-size: 0.9em; }
+.avtt-quick-chips img { width: 1.3em; height: 1.3em; border: none; }
+.avtt-quick-body .avtt-death { margin-top: 0; }
+.avtt-temp { border-color: var(--avtt-temp) !important; }
+.avtt-seat .avtt-temp.selected { background: var(--avtt-temp); color: #111; font-weight: bold; }
+.avtt-seat .avtt-temp:not(.selected):hover { background: color-mix(in srgb, var(--avtt-temp) 25%, transparent); }
+
+/* Automation prompt, above the pill */
+.avtt-seat .avtt-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  width: min(100%, 26em);
+  padding: 0.6em;
+  box-sizing: border-box;
+  background: var(--avtt-bg);
+  border: 2px solid var(--seat-color);
+  border-radius: var(--avtt-radius);
+  box-shadow: 0 0 1em var(--seat-color);
+}
+.avtt-prompt p { margin: 0; }
+.avtt-prompt-choices { display: flex; flex-direction: column; gap: 0.3em; }
+.avtt-death-tally { display: flex; gap: 1em; }
+.avtt-death-tally .success i { color: var(--avtt-adv); }
+.avtt-death-tally .failure i { color: var(--avtt-dis); }
+
+/* Chat message box, below the log */
+.avtt-chat-compose { display: flex; gap: 0.3em; flex: none; }
+.avtt-chat-compose input { flex: 1; min-width: 0; }
+
+/* Notice above the pill: a warning before an action, or a roll result. Click to dismiss. */
+.avtt-seat .avtt-notice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1em;
+  max-width: min(100%, 28em);
+  /* Core gives buttons a fixed height (--button-size), which let the second line spill out below the notice. */
+  height: auto;
+  min-height: 0;
+  padding: 0.4em 2.2em;
+  border-radius: var(--avtt-radius);
+  box-shadow: 0 0.2em 1em rgba(0, 0, 0, 0.5);
+  opacity: 1;
+  animation: avtt-notice-in 200ms ease-out;
+}
+.avtt-notice-name { font-size: 0.75em; opacity: 0.85; }
+.avtt-notice-text { font-size: 1.3em; font-weight: bold; }
+.avtt-notice-detail { font-size: 0.85em; opacity: 0.9; }
+.avtt-notice-close { position: absolute; top: 50%; right: 0.8em; transform: translateY(-50%); opacity: 0.8; }
+.avtt-seat button.avtt-notice-warning { background: #d29922; border-color: #d29922; color: #111; }
+.avtt-seat button.avtt-notice-damage { background: var(--avtt-hp-low); border-color: var(--avtt-hp-low); color: #fff; }
+.avtt-seat button.avtt-notice-healing { background: var(--avtt-hp); border-color: var(--avtt-hp); color: #111; }
+/* Any other roll: the colour of the seat's player. */
+.avtt-seat button.avtt-notice-roll { background: var(--seat-color); border-color: var(--seat-color); color: var(--seat-ink, #111); }
+@keyframes avtt-notice-in { from { opacity: 0; transform: translateY(0.6em); } }
+/* The notice's button (Roll damage), between the notice and the pill. */
+.avtt-seat .avtt-notice-action {
+  width: auto;
+  padding: 0 1.2em;
+  border-radius: 999px;
+  background: var(--avtt-hp-low);
+  border-color: var(--avtt-hp-low);
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 0.2em 1em rgba(0, 0, 0, 0.5);
+  animation: avtt-notice-in 200ms ease-out;
+}
+
+/* Buttons whose action is still running (see BUSY_ACTIONS in seat.mjs). */
+.avtt-seat button[aria-busy="true"] { opacity: 0.6; cursor: progress; }
+
+@media (prefers-reduced-motion: reduce) { .avtt-seat :is(.avtt-notice, .avtt-notice-action) { animation: none; } }
+.avtt-active-turn .avtt-pill { animation: avtt-glow 1.6s ease-in-out infinite; }
+.avtt-active-turn::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 0.35em;
+  background: var(--seat-color);
+  box-shadow: 0 0 1.2em 0.3em var(--seat-color);
+}
+
+@keyframes avtt-glow {
+  0%, 100% { box-shadow: 0 0 0.4em var(--seat-color); }
+  50% { box-shadow: 0 0 1.6em 0.3em var(--seat-color); }
+}
+@keyframes avtt-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.3em); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avtt-turn-banner, .avtt-active-turn .avtt-pill { animation: none; }
+}
+
+/* ---------- Tooltips from a seat ---------- */
+
+/* Core's tooltip (#tooltip) gets these classes from the seat's data-tooltip-class; it turns around its own centre. */
+#tooltip.avtt-tooltip-top { rotate: 180deg; }
+#tooltip.avtt-tooltip-left { rotate: 90deg; }
+#tooltip.avtt-tooltip-right { rotate: -90deg; }
+
+/* ---------- Windows rotated toward a seat ---------- */
+
+.application.avtt-rotated {
+  outline: 3px solid var(--seat-color);
+  transform-origin: center center;
+}
+
+/* ---------- Physical dice entry (table resolver and GM window) ---------- */
+
+.avtt-dice-entry { gap: 0.5rem; }
+.avtt-dice-entry .formula { margin: 0; font-family: monospace; font-size: 1.1em; text-align: center; }
+.avtt-dice-note { margin: 0; text-align: center; }
+.avtt-dice-who { margin: 0; font-size: 1.1em; }
+.avtt-dice-entry fieldset { display: flex; flex-direction: column; gap: 0.4rem; margin: 0; }
+.avtt-dice-slots { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.avtt-dice-slots .die-input input { width: 4em; font-size: 1.2em; text-align: center; }
+.avtt-dice-pad { display: flex; flex-direction: column; gap: 0.25rem; }
+.avtt-pad-faces { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0.25rem; }
+.avtt-pad-row { display: grid; grid-template-columns: 3.5em repeat(10, 1fr); gap: 0.25rem; align-items: center; }
+.avtt-dice-pad button { min-width: 0; padding: 0.35em 0; font-weight: bold; }
+.avtt-dice-pad button.active { outline: 2px solid var(--seat-color, var(--color-warm-2, orange)); }
+.avtt-roll-resolver .form-footer, .avtt-gm-dice .form-footer { display: flex; gap: 0.5rem; }
+
+/* ---------- GM seat editor ---------- */
+
+.avtt-seat-editor .window-content { display: flex; flex-direction: column; gap: 0.75rem; }
+.avtt-table-diagram {
+  display: grid;
+  grid-template-columns: 11rem 1fr 11rem;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    ".    top     ."
+    "left surface right"
+    ".    bottom  .";
+  gap: 0.5rem;
+}
+.avtt-side { display: flex; gap: 0.5rem; }
+.avtt-side-top { grid-area: top; }
+.avtt-side-bottom { grid-area: bottom; }
+.avtt-side-left { grid-area: left; flex-direction: column; }
+.avtt-side-right { grid-area: right; flex-direction: column; }
+.avtt-side-top .avtt-seat-card, .avtt-side-bottom .avtt-seat-card { flex: 1; }
+.avtt-table-surface {
+  grid-area: surface;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;
+  min-height: 12rem;
+  border: 2px dashed var(--color-border, #888);
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  opacity: 0.7;
+}
+.avtt-table-surface i { font-size: 2.5rem; }
+.avtt-seat-card {
+  display: flex; flex-direction: column; gap: 0.3rem;
+  margin: 0; padding: 0.4rem;
+  border: 2px solid var(--seat-color);
+  border-radius: 0.4rem;
+  min-width: 0;
+}
+.avtt-seat-card legend { font-size: 0.8rem; padding: 0 0.3rem; }
+.avtt-seat-card-row { display: flex; gap: 0.3rem; align-items: center; }
+.avtt-seat-card-row input[type="color"] { flex: none; width: 2.5rem; height: 1.8rem; padding: 0; }
+.avtt-seat-card-row button { flex: 1; font-size: 0.8rem; }
+.avtt-seat-card select.avtt-duplicate { outline: 2px solid #d73a49; }
+
+/* ---------- Spells tab ---------- */
+
+/* Tab labels stay on one line: each tab is as wide as its label (sharing spare room), and a row that can't fit
+   them all wraps instead of squeezing the text. */
+.avtt-tabs { flex-wrap: wrap; }
+/* A line between the tabs and what they show (character sheet, quick actions). */
+.avtt-panel > .avtt-tabs { padding-bottom: 0.45em; border-bottom: 1px solid var(--avtt-border); }
+.avtt-tabs button { flex: 1 1 auto; font-size: 0.85em; padding-inline: 0.5em; white-space: nowrap; }
+.avtt-seat .avtt-spell-prepare { flex: none; width: 2em; padding-inline: 0; }
+.avtt-spell-always { flex: none; width: 2em; text-align: center; color: var(--seat-color); }
+.avtt-spell-name { flex: 1; min-width: 0; display: flex; gap: 0.5em; align-items: center; padding: 0.25em 0.55em; }
+.avtt-spell-name img { width: 1.8em; height: 1.8em; border: none; flex: none; }
+.avtt-spell-unavailable .avtt-spell-name { color: var(--avtt-muted); }
+.avtt-item-list .avtt-spell-tag {
+  flex: none; font-style: normal; font-size: 0.75em; font-weight: bold;
+  padding: 0 0.35em; border: 1px solid var(--avtt-border); border-radius: 0.3em;
+}
+
+/* ---------- Party (shared inventory module) ---------- */
+
+.avtt-panel.avtt-party { width: 22em; }
+
+/* ---------- Number pad for number fields ---------- */
+
+/* A panel of its own, beside the seat's open panels, while a number field has focus. */
+.avtt-panel.avtt-keypad {
+  width: 12em;
+  gap: 0.35em;
+  align-self: flex-end;
+  opacity: 1;
+}
+.avtt-keypad-title { display: flex; gap: 0.4em; align-items: center; padding-bottom: 0.35em; border-bottom: 1px solid var(--avtt-border); font-weight: bold; }
+.avtt-keypad-title span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avtt-keypad-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 0.3em; }
+.avtt-keypad-digits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.3em; }
+.avtt-seat .avtt-keypad button { height: 2.4em; min-height: 0; padding: 0; font-size: 1.05em; font-weight: bold; user-select: none; }
+.avtt-seat .avtt-keypad .avtt-keypad-done { background: var(--seat-color); border-color: var(--seat-color); color: var(--seat-ink, #111); }
+
+/* Quick actions: the rest buttons share their row. */
+.avtt-rest-row button { flex: 1; height: auto; min-height: 2.6em; }
+
+/* Favorites on the pill: their own row below the player pill (it folds with the tools and sections), small icon
+   buttons; a hint while there are none. */
+.avtt-pill-favorites { align-items: center; }
+.avtt-seat .avtt-pill-favorites button {
+  flex: none;
+  width: 2.1em; height: 2.1em; min-height: 0;
+  padding: 0.1em;
+}
+.avtt-pill-favorites img { width: 100%; height: 100%; border: none; border-radius: 0.25em; object-fit: cover; }
+.avtt-pill-favorites-hint { color: var(--avtt-muted); font-size: 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* The favorite star on sheet rows. */
+.avtt-seat .avtt-favorite { flex: none; width: auto; }
+.avtt-seat .avtt-favorite.active { background: var(--avtt-bg-raised); border-color: gold; color: gold; }
+.avtt-seat .avtt-favorite.active:hover { background: var(--avtt-bg-hover); filter: none; }
+
+/* SotDL: the fast / slow turn choice in the initiative strip. */
+.avtt-seat .avtt-turn-speed button.selected { background: var(--seat-color); border-color: var(--seat-color); color: var(--seat-ink, #111); font-weight: bold; }
+
+/* Table seat picker (options window, every user). */
+.avtt-seat-picker .window-content { display: flex; flex-direction: column; gap: 0.5rem; }
+.avtt-seat-picker label { display: flex; align-items: center; gap: 0.5em; }
+.avtt-seat-picker label img { width: 2em; height: 2em; object-fit: cover; border: none; border-radius: 4px; flex: none; }

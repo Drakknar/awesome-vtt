@@ -1,0 +1,67 @@
+{{!-- Every spell by level: cast it (when it can be cast now), prepare or unprepare it, read its description. --}}
+{{#each spells}}
+<section class="avtt-group">
+  <h4>{{label}}
+    {{#if slots}}
+    <span class="avtt-slots avtt-adjust">
+      {{localize "AVTT.Sheet.Slots"}}
+      <button type="button" data-action="slotAdjust" data-slot="{{slots.key}}" data-delta="-1" data-tooltip="" aria-label="{{localize 'AVTT.Sheet.SlotLess'}}">−</button>
+      <span>{{slots.value}}/{{slots.max}}</span>
+      <button type="button" data-action="slotAdjust" data-slot="{{slots.key}}" data-delta="1" data-tooltip="" aria-label="{{localize 'AVTT.Sheet.SlotMore'}}">+</button>
+    </span>
+    {{/if}}
+  </h4>
+  <ul class="avtt-item-list">
+    {{#each items}}
+    <li class="avtt-item-row avtt-spell-row {{#unless usable}}avtt-spell-unavailable{{/unless}}">
+      {{#if canPrepare}}
+      <button type="button" data-action="spellPrepare" data-item-id="{{id}}" data-tooltip="" class="avtt-spell-prepare {{#if prepared}}active{{/if}}"
+              aria-label="{{#if prepared}}{{localize 'AVTT.Spells.Unprepare' name=name}}{{else}}{{localize 'AVTT.Spells.Prepare' name=name}}{{/if}}"
+              aria-pressed="{{#if prepared}}true{{else}}false{{/if}}">
+        <i class="fa-solid {{#if prepared}}fa-book-open{{else}}fa-book{{/if}}" inert></i>
+      </button>
+      {{else if always}}
+      <span class="avtt-spell-always" aria-label="{{localize 'AVTT.Spells.Always'}}" data-tooltip=""><i class="fa-solid fa-thumbtack" inert></i></span>
+      {{/if}}
+      {{#if usable}}
+      <button type="button" data-action="useItem" data-item-id="{{id}}">
+        <img src="{{img}}" alt=""><span>{{name}}</span>
+        {{#if concentration}}<em class="avtt-spell-tag" aria-label="{{localize 'AVTT.Spells.Concentration'}}">C</em>{{/if}}
+        {{#if ritual}}<em class="avtt-spell-tag" aria-label="{{localize 'AVTT.Spells.Ritual'}}">R</em>{{/if}}
+      </button>
+      {{else}}
+      <span class="avtt-spell-name">
+        <img src="{{img}}" alt=""><span>{{name}}</span>
+        {{#if concentration}}<em class="avtt-spell-tag">C</em>{{/if}}{{#if ritual}}<em class="avtt-spell-tag">R</em>{{/if}}
+      </span>
+      {{/if}}
+      {{#if usesMax}}
+      <span class="avtt-adjust">
+        <button type="button" data-action="usesAdjust" data-item-id="{{id}}" data-delta="-1" data-tooltip="" aria-label="{{localize 'AVTT.Sheet.UseLess'}}">−</button>
+        <span>{{usesValue}}/{{usesMax}}</span>
+        <button type="button" data-action="usesAdjust" data-item-id="{{id}}" data-delta="1" data-tooltip="" aria-label="{{localize 'AVTT.Sheet.UseMore'}}">+</button>
+      </span>
+      {{/if}}
+      {{#if @root.canFavorite}}
+      <button type="button" data-action="toggleFavorite" data-item-id="{{id}}" data-tooltip="" class="avtt-favorite {{#if favorite}}active{{/if}}"
+              aria-label="{{#if favorite}}{{localize 'AVTT.Sheet.Unfavorite' name=name}}{{else}}{{localize 'AVTT.Sheet.Favorite' name=name}}{{/if}}"
+              aria-pressed="{{#if favorite}}true{{else}}false{{/if}}">
+        <i class="{{#if favorite}}fa-solid{{else}}fa-regular{{/if}} fa-star" inert></i>
+      </button>
+      {{/if}}
+      <button type="button" data-action="invDetails" data-item-id="{{id}}" data-tooltip=""
+              class="avtt-item-info {{#if (lookup @root.state.inv.details id)}}active{{/if}}"
+              aria-label="{{localize 'AVTT.Sheet.About' name=name}}"
+              aria-expanded="{{#if (lookup @root.state.inv.details id)}}true{{else}}false{{/if}}">
+        <i class="fa-solid fa-circle-info" inert></i>
+      </button>
+      {{#with (lookup @root.state.inv.details id) as |html|}}
+      <div class="avtt-inv-details avtt-item-details">{{{html}}}</div>
+      {{/with}}
+    </li>
+    {{/each}}
+  </ul>
+</section>
+{{else}}
+<p class="avtt-muted">{{localize "AVTT.Spells.None"}}</p>
+{{/each}}

@@ -1,0 +1,28 @@
+{{!-- An automation prompt (death save, concentration, saving throw, GM request, initiative), above the pill. --}}
+<header class="avtt-panel-header">
+  <strong><i class="{{icon}}" inert></i> {{title}}</strong>
+  <button type="button" data-action="promptLater" data-tooltip="" aria-label="{{localize 'AVTT.Prompt.Later'}}"><i class="fa-solid fa-xmark" inert></i></button>
+</header>
+<p>{{text}}</p>
+{{#if tally}}
+<div class="avtt-death-tally" aria-label="{{localize 'AVTT.Sheet.DeathSaves'}}">
+  <span class="success">{{localize "AVTT.Prompt.Successes"}}
+    {{#each tally.success}}<i class="fa-{{#if this}}solid{{else}}regular{{/if}} fa-circle-check" inert></i>{{/each}}</span>
+  <span class="failure">{{localize "AVTT.Prompt.Failures"}}
+    {{#each tally.failure}}<i class="fa-{{#if this}}solid{{else}}regular{{/if}} fa-circle-xmark" inert></i>{{/each}}</span>
+</div>
+{{/if}}
+{{#if modes}}
+<div class="avtt-segmented" role="radiogroup" aria-label="{{localize 'AVTT.Utility.Dice.NextRoll'}}">
+  {{#each modes}}
+  <button type="button" data-action="advMode" data-mode="{{id}}" role="radio" class="avtt-adv-{{tone}} {{#if active}}selected{{/if}}"
+          aria-checked="{{#if active}}true{{else}}false{{/if}}" aria-label="{{label}}" {{#unless (eq text label)}}data-tooltip=""{{/unless}}>{{text}}</button>
+  {{/each}}
+</div>
+{{/if}}
+<div class="avtt-prompt-choices">
+  {{#each choices}}
+  <button type="button" data-action="promptChoice" data-index="{{@index}}" class="avtt-primary">{{#if icon}}<i class="{{icon}}" inert></i> {{/if}}{{label}}</button>
+  {{/each}}
+</div>
+{{#if more}}<p class="avtt-muted">{{localize "AVTT.Prompt.More" count=more}}</p>{{/if}}

@@ -1,0 +1,18 @@
+<div class="avtt-seat-picker-body">
+  <p class="hint">{{localize "AVTT.SeatMove.Hint"}}</p>
+  {{#each characters}}
+  <div class="form-group">
+    <label for="avtt-seat-picker-{{id}}"><img src="{{img}}" alt=""> {{name}}</label>
+    <div class="form-fields">
+      <select id="avtt-seat-picker-{{id}}" data-actor-id="{{id}}">
+        {{#unless seated}}<option value="" selected>{{localize "AVTT.SeatMove.NotSeated"}}</option>{{/unless}}
+        {{#each seats}}
+        <option value="{{key}}" {{#if current}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{label}}{{#if occupant}} — {{occupant}}{{/if}}</option>
+        {{/each}}
+      </select>
+    </div>
+  </div>
+  {{else}}
+  <p>{{localize "AVTT.SeatMove.NoCharacters"}}</p>
+  {{/each}}
+</div>

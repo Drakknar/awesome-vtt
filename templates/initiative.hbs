@@ -1,0 +1,29 @@
+<div class="avtt-init-header">
+  <button type="button" data-action="toggleInitiative" class="avtt-init-toggle">
+    <i class="fa-solid fa-hourglass-half"></i>
+    {{#if started}}{{localize "AVTT.Initiative.Round"}} {{round}}{{else}}{{localize "AVTT.Initiative.NotStarted"}}{{/if}}
+    <i class="fa-solid {{#if open}}fa-chevron-down{{else}}fa-chevron-up{{/if}}"></i>
+  </button>
+  {{#if canRoll}}<button type="button" data-action="rollInitiative">{{localize "AVTT.Initiative.Roll"}}</button>{{/if}}
+  {{!-- SotDL: choose a fast or slow turn (it sets the initiative). --}}
+  {{#if speed}}
+  <div class="avtt-segmented avtt-turn-speed" role="radiogroup" aria-label="{{localize 'AVTTC.Turn.label'}}">
+    <button type="button" data-action="turnSpeed" data-fast="true" role="radio" class="{{#if speed.fast}}selected{{/if}}"
+            aria-checked="{{#if speed.fast}}true{{else}}false{{/if}}" {{#unless speed.canBeFast}}disabled{{/unless}}>{{localize "AVTTC.Turn.fast"}}</button>
+    <button type="button" data-action="turnSpeed" data-fast="false" role="radio" class="{{#unless speed.fast}}selected{{/unless}}"
+            aria-checked="{{#if speed.fast}}false{{else}}true{{/if}}">{{localize "AVTTC.Turn.slow"}}</button>
+  </div>
+  {{/if}}
+  {{#if canEndTurn}}<button type="button" data-action="endTurn" class="avtt-end-turn">{{localize "AVTT.Initiative.EndTurn"}}</button>{{/if}}
+</div>
+{{#if open}}
+<ol class="avtt-init-list">
+  {{#each turns}}
+  <li class="{{#if current}}current{{/if}} {{#if mine}}mine{{/if}} {{#if defeated}}defeated{{/if}}">
+    <img src="{{img}}" alt="">
+    <span class="avtt-init-name">{{name}}</span>
+    <span class="avtt-init-value">{{initiative}}</span>
+  </li>
+  {{/each}}
+</ol>
+{{/if}}

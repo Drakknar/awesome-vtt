@@ -1,0 +1,34 @@
+<section class="flexcol standard-form avtt-dice-entry">
+  <p class="formula">{{formula}}</p>
+  {{#if waitingForGM}}
+  <p class="avtt-dice-note"><i class="fa-solid fa-hourglass-half fa-fade"></i> {{localize "AVTT.Dice.WaitingForGM"}}</p>
+  {{else if gmCanEnter}}
+  <p class="avtt-dice-note">{{localize "AVTT.Dice.GMCanEnter"}}</p>
+  {{/if}}
+  {{#each groups}}
+  <fieldset class="input-grid" data-term-id="{{@key}}">
+    <legend>{{label}} <span data-tooltip aria-label="{{tooltip}}">{{{icon}}}</span></legend>
+    <div class="avtt-dice-slots">
+      {{#each results}}
+      <label class="icon die-input {{#if isNew}}new-addition{{/if}}" data-denomination="{{denomination}}" data-method="{{method}}">
+        {{numberInput value min=minValue max=maxValue step=1 name=id readonly=readonly placeholder=denomination disabled=disabled}}
+        {{#if rerolled}}<i class="fa-solid fa-arrow-rotate-right"></i>{{/if}}
+        {{#if exploded}}<i class="fa-solid fa-burst"></i>{{/if}}
+        {{{icon}}}
+      </label>
+      {{/each}}
+    </div>
+    {{#if pad}}{{> "modules/awesome-vtt/templates/dice-pad.hbs" pad}}{{/if}}
+  </fieldset>
+  {{/each}}
+  <p class="avtt-dice-note avtt-muted">{{localize "AVTT.Dice.EmptyIsDigital"}}</p>
+  <footer class="form-footer">
+    {{#unless waitingForGM}}
+    <button type="button" data-action="avttClear"><i class="fa-solid fa-eraser" inert></i> {{localize "AVTT.Dice.Clear"}}</button>
+    {{/unless}}
+    <button type="submit">
+      <i class="fa-solid fa-check" inert></i>
+      {{#if waitingForGM}}{{localize "AVTT.Dice.RollDigitally"}}{{else}}{{localize "AVTT.Dice.Confirm"}}{{/if}}
+    </button>
+  </footer>
+</section>

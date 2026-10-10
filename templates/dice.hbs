@@ -1,0 +1,51 @@
+{{!-- Next roll: advantage / disadvantage for the next d20 roll from this seat (sheet, dice pool, prompts), as on the
+     phone. It shows as a chip on the player pill and resets after one roll. Each section below is divided by a line. --}}
+{{!-- The choices scroll when the seat has little room; the formula and the Roll button stay at the bottom. --}}
+<div class="avtt-dice-scroll">
+<div class="avtt-dice-next">
+  <span>{{localize "AVTT.Utility.Dice.NextRoll"}}</span>
+  <div class="avtt-segmented" role="radiogroup" aria-label="{{localize 'AVTT.Utility.Dice.NextRoll'}}">
+    {{#each advModes}}
+    <button type="button" data-action="advMode" data-mode="{{id}}" role="radio" class="avtt-adv-{{tone}} {{#if active}}selected{{/if}}"
+            aria-checked="{{#if active}}true{{else}}false{{/if}}" aria-label="{{label}}" {{#unless (eq text label)}}data-tooltip=""{{/unless}}>{{text}}</button>
+    {{/each}}
+  </div>
+</div>
+{{!-- Dice pool: two dice per row, each with − count +. --}}
+<div class="avtt-dice-grid">
+  {{#each dice}}
+  <div class="avtt-die {{#if count}}active{{/if}}">
+    <button type="button" data-action="diceRemove" data-die="{{die}}" data-tooltip="" {{#unless count}}disabled{{/unless}}
+            aria-label="{{localize 'AVTT.Utility.Dice.RemoveOne' die=die}}">−</button>
+    <span class="avtt-die-label"><strong>{{die}}</strong>{{#if count}}<em>×{{count}}</em>{{/if}}</span>
+    <button type="button" data-action="diceAdd" data-die="{{die}}" data-tooltip=""
+            aria-label="{{localize 'AVTT.Utility.Dice.AddOne' die=die}}">+</button>
+  </div>
+  {{/each}}
+</div>
+<div class="avtt-button-row">
+  <button type="button" data-action="diceMod" data-delta="-1">−1</button>
+  <span class="avtt-dice-mod">{{localize "AVTT.Utility.Dice.Modifier"}} {{mod}}</span>
+  <button type="button" data-action="diceMod" data-delta="1">+1</button>
+</div>
+{{#if physicalAvailable}}
+<div class="avtt-button-row avtt-dice-source">
+  <button type="button" data-action="diceSource" data-source="physical" class="{{#if physical}}active{{/if}}">
+    <i class="fa-solid fa-hand" inert></i> {{localize "AVTT.Utility.Dice.Physical"}}
+  </button>
+  <button type="button" data-action="diceSource" data-source="digital" class="{{#unless physical}}active{{/unless}}">
+    <i class="fa-solid fa-computer" inert></i> {{localize "AVTT.Utility.Dice.Digital"}}
+  </button>
+</div>
+{{/if}}
+</div>
+<div class="avtt-dice-footer">
+<div class="avtt-dice-formula">{{#if formula}}{{formula}}{{else}}<span class="avtt-muted">{{localize "AVTT.Utility.Dice.Empty"}}</span>{{/if}}</div>
+<div class="avtt-button-row">
+  <button type="button" data-action="diceClear">{{localize "AVTT.Utility.Dice.Clear"}}</button>
+  <button type="button" data-action="diceRoll" class="avtt-primary" {{#unless formula}}disabled{{/unless}}>
+    {{#if physical}}<i class="fa-solid fa-keyboard" inert></i> {{localize "AVTT.Utility.Dice.EnterResults"}}
+    {{else}}<i class="fa-solid fa-dice" inert></i> {{localize "AVTT.Utility.Dice.Roll"}}{{/if}}
+  </button>
+</div>
+</div>

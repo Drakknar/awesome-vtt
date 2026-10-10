@@ -1,0 +1,16 @@
+<div class="avtt-dice-pad">
+  {{#if faces}}
+  <div class="avtt-pad-faces">
+    {{#each faces}}<button type="button" data-action="avttPad" data-value="{{this}}">{{this}}</button>{{/each}}
+  </div>
+  {{else if percentile}}
+  <div class="avtt-pad-row">
+    <span>{{localize "AVTT.Dice.Tens"}}</span>
+    {{#each tens}}<button type="button" data-action="avttPad" data-tens="{{value}}">{{label}}</button>{{/each}}
+  </div>
+  <div class="avtt-pad-row">
+    <span>{{localize "AVTT.Dice.Units"}}</span>
+    {{#each units}}<button type="button" data-action="avttPad" data-unit="{{this}}">{{this}}</button>{{/each}}
+  </div>
+  {{/if}}
+</div>

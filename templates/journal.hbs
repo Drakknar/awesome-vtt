@@ -1,0 +1,65 @@
+{{#if entry}}
+<div class="avtt-journal-entry">
+  <div class="avtt-button-row">
+    <button type="button" data-action="journalBack"><i class="fa-solid fa-arrow-left" inert></i> {{localize "AVTT.Journal.Back"}}</button>
+    <button type="button" data-action="journalFull" data-uuid="{{entry.uuid}}" data-page-id="{{entry.page.id}}">
+      <i class="fa-solid fa-up-right-from-square" inert></i> {{localize "AVTT.Journal.OpenFull"}}
+    </button>
+  </div>
+  <h3>{{entry.name}}</h3>
+  {{#if (gt entry.pages.length 1)}}
+  <nav class="avtt-journal-pages">
+    {{#each entry.pages}}
+    <button type="button" data-action="journalPage" data-page-id="{{id}}" class="{{#if active}}active{{/if}}">{{name}}</button>
+    {{/each}}
+  </nav>
+  {{/if}}
+  {{#with entry.page as |page|}}
+  <div class="avtt-journal-content">
+    {{#if page.html}}{{{page.html}}}
+    {{else if page.image}}<figure><img src="{{page.image}}" alt="{{page.name}}">{{#if page.caption}}<figcaption>{{page.caption}}</figcaption>{{/if}}</figure>
+    {{else if page.external}}<p class="avtt-muted">{{localize "AVTT.Journal.External"}}</p>
+    {{/if}}
+  </div>
+  {{else}}
+  <p class="avtt-muted">{{localize "AVTT.Journal.NoPages"}}</p>
+  {{/with}}
+</div>
+{{else if image}}
+<div class="avtt-journal-entry">
+  <div class="avtt-button-row">
+    <button type="button" data-action="journalBack"><i class="fa-solid fa-arrow-left" inert></i> {{localize "AVTT.Journal.Back"}}</button>
+  </div>
+  {{#if image.title}}<h3>{{image.title}}</h3>{{/if}}
+  <figure class="avtt-journal-content"><img src="{{image.image}}" alt="{{image.title}}">{{#if image.caption}}<figcaption>{{image.caption}}</figcaption>{{/if}}</figure>
+</div>
+{{else}}
+{{#if shared.length}}
+<section class="avtt-group">
+  <h4>{{localize "AVTT.Journal.Shared"}}</h4>
+  <ul class="avtt-comp-results">
+    {{#each shared}}
+    <li>
+      <button type="button" data-action="journalShared" data-index="{{index}}">
+        <i class="fa-solid {{#if (eq kind 'image')}}fa-image{{else}}fa-book-open{{/if}}" inert></i><span>{{#if title}}{{title}}{{else}}{{localize "AVTT.Journal.Untitled"}}{{/if}}</span>
+      </button>
+    </li>
+    {{/each}}
+  </ul>
+</section>
+{{/if}}
+<div class="avtt-comp-search">
+  <input type="search" name="journalQuery" value="{{query}}" maxlength="64" placeholder="{{localize 'AVTT.Journal.Placeholder'}}">
+</div>
+<ul class="avtt-comp-results">
+  {{#each entries}}
+  <li>
+    <button type="button" data-action="journalOpen" data-uuid="{{uuid}}">
+      <i class="fa-solid fa-book" inert></i><span>{{name}}</span>{{#if folder}}<em>{{folder}}</em>{{/if}}
+    </button>
+  </li>
+  {{else}}
+  <li class="avtt-muted">{{localize "AVTT.Journal.None"}}</li>
+  {{/each}}
+</ul>
+{{/if}}

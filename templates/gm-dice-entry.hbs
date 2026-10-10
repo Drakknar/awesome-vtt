@@ -1,0 +1,16 @@
+<section class="avtt-dice-entry">
+  <p class="avtt-dice-who"><i class="fa-solid fa-dice"></i> <strong>{{speaker}}</strong> <span class="avtt-muted">· {{user}}</span></p>
+  {{#if flavor}}<p class="avtt-muted">{{flavor}}</p>{{/if}}
+  <p class="formula">{{formula}}</p>
+  {{#each slots}}
+  <fieldset class="input-grid" data-term-id="{{termId}}" data-faces="{{faces}}">
+    <legend>{{label}}{{#if extra}} · {{localize "AVTT.Dice.Extra"}}{{/if}}</legend>
+    <div class="avtt-dice-slots">
+      {{#each inputs}}
+      <label class="die-input"><input type="number" min="1" max="{{../faces}}" step="1" placeholder="d{{../faces}}" {{#if @first}}{{#if @../first}}autofocus{{/if}}{{/if}}></label>
+      {{/each}}
+    </div>
+    {{#if pad}}{{> "modules/awesome-vtt/templates/dice-pad.hbs" pad}}{{/if}}
+  </fieldset>
+  {{/each}}
+</section>
