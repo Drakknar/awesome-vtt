@@ -49,3 +49,16 @@ Sister module: `../awesome-vtt-mobile` (phone companion).
 - **Layout checks in a real browser:** Google Chrome is installed; `--headless=new --dump-dom` on a probe page with Foundry's `public/css/foundry2.css` (from the core zip), Font Awesome and this module's CSS measures layout for real (this is how the pill-width growth was found: Chrome's natural width of column-flex buttons follows their current width, so `Seat#measurePillNeed` measures label text instead).
 - **Core button height:** Foundry v14 gives every `button` `height` / `min-height: var(--button-size)` (2em, in a CSS layer). Buttons that are taller (icon above a label) or round need an explicit `height` / `min-height` here, and `.avtt-seat button { width: auto }` beats single-class width rules, so size seat buttons with `.avtt-seat .class`.
 - **Checks after edits:** `node --check` on changed `.mjs` files, precompile changed `.hbs` files, and validate `lang/en.json`. Keep the README in step with features.
+
+## Upstream watch
+
+`.github/workflows/compat-review.yml` runs daily and has Claude review this module once for each new version of a dependency, following `.github/prompts/foundry-compat.md`.
+- **Game systems:** a release of a system in `relationships.systems` newer than its `verified` version.
+- **Foundry core:** a new Stable build, with a light review within the verified generation and a full review for a new generation.
+- **Results:**
+  - The module is fine: a pull request that bumps `verified`. It goes out with the next manual release.
+  - A fix: a pull request.
+  - Anything that needs the owner: an issue labelled `upstream-watch` and assigned to the owner.
+  - New features worth using: an `enhancement` issue.
+- **Access:** Claude works with read-only access (secret `CLAUDE_CODE_OAUTH_TOKEN`). A separate job opens the pull request and issues.
+- **Bookkeeping:** `.github/scripts/watch.sh` records what was reviewed on the `watch-state` branch. Run the workflow by hand with `force` to review again.
