@@ -2,7 +2,7 @@
 
 A Foundry VTT module for playing in person around a screen under a glass table. One browser, logged in as a dedicated "table" user, shows a panel for each seated player. Each panel is rotated to face that player.
 
-- **Targets:** Foundry VTT v14 and dnd5e 6.0.x (built against 6.0.5).
+- **Targets:** Foundry VTT v14 and dnd5e 6.0.x (built against 6.0.5, verified with 6.0.6).
 - **Input:** a shared mouse or trackpad. It is not designed for touch.
 
 ## Features
