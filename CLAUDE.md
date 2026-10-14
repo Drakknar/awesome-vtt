@@ -1,6 +1,6 @@
 # awesome-vtt – project notes
 
-In-person table mode for Foundry VTT **v14** and **dnd5e 6.0.x** (built against 6.0.5), by Stefano Pignataro.
+In-person table mode for Foundry VTT **v14** and **dnd5e 6.0.x** (built against 6.0.5, verified with 6.0.6), by Stefano Pignataro.
 Sister module: `../awesome-vtt-mobile` (phone companion).
 
 ## What it is
