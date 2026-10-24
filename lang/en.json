@@ -21,7 +21,7 @@
       },
       "RotateWindows": {
         "Name": "Rotate windows toward the seat",
-        "Hint": "Windows opened from a seat (roll dialogs, spell-slot and rest dialogs, journals) are rotated and moved toward that player."
+        "Hint": "Windows opened from a seat (roll dialogs, spell-slot and rest dialogs, journals) are rotated and moved toward that player. A seated character's sheet, and its items' sheets, face that character's seat however they are opened (for example by double-clicking the token)."
       },
       "TurnIndicator": {
         "Name": "Your-turn indicator",
