@@ -72,7 +72,7 @@ The table also runs in **Shadow of the Demon Lord** worlds (system `demonlord` 6
 - **Roll results** in the seat: totals, success / failure of challenges, hit / miss of attacks, damage totals, and the spell's name for a spell cast without an attack roll.
 - **Damage:** not rolled automatically. An attack, spell, talent or item that didn't miss (or had no target) and has damage gets **Roll damage** under its result: it clicks the card's damage buttons for you (the system's own damage roll, including extra damage types and the 20+ extra damage when the card offers them), and the result shows the total.
 - **Prompts:** GM challenge requests (the GM's challenge button on a card whispers a "make a challenge roll" card; the seat offers the roll, with the card's boons plus the Next roll) and, at the start of an encounter, Fast / Slow turn.
-- **Favorites:** stars in the sheet, the favorites row on the pill (kept on the character, as the system has none).
+- **Favorites:** stars in the sheet, the favorites row on the pill (kept on the character, as the system has none). Only things that do something when used can be favorites: weapons, talents, spells, and gear that attacks, deals damage, heals, has an extra effect, is a consumable or carries active effects. A candle, for example, has no star. A favorite that no longer qualifies leaves the pill and keeps its star in the Inventory tab, so it can be taken off.
 - **Party:** with the Shared Inventory module, a Party actor the GM creates or chooses (see that module).
 
 ## Setup
