@@ -13,7 +13,7 @@ import { registerCoreSettings } from "../../awesome-vtt-core/scripts/settings.mj
 import { isSupported, markSystem } from "../../awesome-vtt-core/scripts/system.mjs";
 import { installSeatedVisibility, refreshSeatedTokens } from "./table/visibility.mjs";
 import { installSeatTooltips } from "./table/tooltips.mjs";
-import { installTurnedContextMenus, installTurnedTippy } from "./table/turned.mjs";
+import { installTurnedContextMenus, installTurnedPopups, installTurnedTippy } from "./table/turned.mjs";
 import { activateSeatSocket, movableActors, seatOf, seatOptions, moveSeat } from "./seat-moves.mjs";
 
 /** Setting of each automation prompt kind (see the core's prompts.mjs); the same keys as on the phone. */
@@ -74,6 +74,7 @@ Hooks.once("ready", () => {
   installSeatTooltips();
   // Context menus and SotDL's own tooltips are drawn outside the turned windows: turn them toward the seat too.
   installTurnedContextMenus();
+  installTurnedPopups();
   if ( game.system.id === "demonlord" ) installTurnedTippy();
   onToolChange(() => overlay.seats.forEach(s => s.refreshTools()));
   game.modules.get(MODULE_ID).api.overlay = overlay;

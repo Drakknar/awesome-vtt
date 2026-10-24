@@ -188,13 +188,15 @@ export function registerSettings() {
     });
   }
 
-  // SotDL: an attribute rolled from a seat's sheet asks for boons or banes first (only listed in SotDL worlds).
+  // A roll from a seat's sheet asks first: SotDL attributes for boons or banes (on by default), dnd5e checks, saves and
+  // skills for advantage (off by default). The key is the same in both systems.
+  const sotdl = game.system.id === "demonlord";
   game.settings.register(MODULE_ID, "askBoons", {
-    name: "AVTT.Settings.AskBoons.Name",
-    hint: "AVTT.Settings.AskBoons.Hint",
+    name: sotdl ? "AVTT.Settings.AskBoons.Name" : "AVTT.Settings.AskAdvantage.Name",
+    hint: sotdl ? "AVTT.Settings.AskBoons.Hint" : "AVTT.Settings.AskAdvantage.Hint",
     scope: "client",
-    config: game.system.id === "demonlord",
-    type: new BooleanField({ initial: true })
+    config: true,
+    type: new BooleanField({ initial: sotdl })
   });
 
   // Around using an action from a seat: checks before, the follow-up roll after, and the result notice.

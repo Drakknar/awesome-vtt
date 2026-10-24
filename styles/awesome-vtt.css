@@ -569,6 +569,10 @@ body:not([data-avtt-system="dnd5e"]) .avtt-chat-log .chat-message .message-heade
 #tooltip.avtt-tooltip-top { rotate: 180deg; }
 #tooltip.avtt-tooltip-left { rotate: 90deg; }
 #tooltip.avtt-tooltip-right { rotate: -90deg; }
+/* Tooltips locked open (middle click) are copies without the #tooltip id. */
+.locked-tooltip.avtt-tooltip-top { rotate: 180deg; }
+.locked-tooltip.avtt-tooltip-left { rotate: 90deg; }
+.locked-tooltip.avtt-tooltip-right { rotate: -90deg; }
 /* SotDL's tippy tooltips turned toward a seat (turned.mjs): the arrow was drawn for the unturned placement. */
 [data-tippy-root][data-avtt-turned-seat] .tippy-arrow { display: none; }
 
