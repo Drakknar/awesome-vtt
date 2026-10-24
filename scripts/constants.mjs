@@ -13,6 +13,9 @@ const SIDES = {
 };
 const ALONG = [1 / 6, 1 / 2, 5 / 6];
 
+/** Each side's turn, e.g. for popups turned toward a seat (table/turned.mjs). */
+export const SIDE_ROTATION = Object.fromEntries(Object.entries(SIDES).map(([side, { rotation }]) => [side, rotation]));
+
 export const SEATS = Object.entries(SIDES).flatMap(([side, { rotation, positions }]) =>
   positions.map((position, i) => ({ key: `${side}-${position}`, side, rotation, along: ALONG[i] }))
 );

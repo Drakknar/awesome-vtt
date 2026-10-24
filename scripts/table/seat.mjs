@@ -6,7 +6,7 @@ import TableSettingsConfig from "../apps/table-settings.mjs";
 import { CompendiumPanel, JournalPanel } from "../../../awesome-vtt-core/scripts/panels.mjs";
 import { DicePanel, advModes, advModeChoices, advModeScale, advModeShort, advModeTone } from "../../../awesome-vtt-core/scripts/dice.mjs";
 import * as sheet from "../../../awesome-vtt-core/scripts/sheet.mjs";
-import { PromptQueue, abilityRollPrompt } from "../../../awesome-vtt-core/scripts/prompts.mjs";
+import { PromptQueue, askAbilityRoll } from "../../../awesome-vtt-core/scripts/prompts.mjs";
 import * as coreUI from "../../../awesome-vtt-core/scripts/ui.mjs";
 import Keypad from "./keypad.mjs";
 
@@ -650,14 +650,8 @@ export default class Seat {
     if ( CompendiumPanel.ACTIONS.has(action) ) return this.compendium.handle(action, target);
     if ( JournalPanel.ACTIONS.has(action) ) return this.journal.handle(action, target);
     if ( DicePanel.ACTIONS.has(action) ) return this.dice.handle(action, target.dataset);
-    // SotDL: an attribute asks for boons or banes first (per-browser setting), in a prompt preset to the Next roll;
-    // an attribute the prompt can't name rolls straight away below.
-    if ( (action === "rollAbility") && sys.FEATURES.abilityRollPrompt && getSetting("askBoons") ) {
-      const prompt = abilityRollPrompt(this.actor, target.dataset.ability);
-      // A second tap on the same attribute while its prompt is up doesn't queue another roll.
-      if ( prompt && this.prompts.has(p => p.local && (p.actor === prompt.actor) && (p.attribute === prompt.attribute)) ) return;
-      if ( prompt ) return this.prompts.add(prompt);
-    }
+    // SotDL: an attribute asks for boons or banes first (per-browser setting), in a prompt preset to the Next roll.
+    if ( (action === "rollAbility") && getSetting("askBoons") && askAbilityRoll(this.prompts, this.actor, target.dataset.ability) ) return;
     if ( sheet.D20_ACTIONS.has(action) ) return this.#d20(mode => sheet.runSheetAction(this.actor, action, target.dataset, mode));
     if ( sheet.SHEET_ACTIONS.has(action) ) {
       return sheet.runSheetAction(this.actor, action, target.dataset, "normal", { toggled: this.state.toggledEffects });

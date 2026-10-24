@@ -193,11 +193,7 @@ export default class TableOverlay {
     }
   }
 
-  /**
-   * Called from the generic ApplicationV2 render hook.
-   * @param {object} [options]  The render options: a window opened again (isFirstRender) chooses its seat again,
-   *   since Foundry reuses the same sheet instance each time it opens.
-   */
+  /** Called from the generic ApplicationV2 render hook (options: its render options). */
   onRenderApplication(app, element, options) {
     if ( TableOverlay.#coreApps.includes(app) ) {
       this.applyCoreUI();
@@ -208,6 +204,7 @@ export default class TableOverlay {
     // Windows opened for a specific seat (e.g. the settings window) always face it, whatever "rotateWindows" says.
     // With "rotateWindows" on, a seated character's sheet (or one of its items) faces that character's seat, however
     // it was opened (e.g. double-clicking its token); other windows face the seat interacted with just before.
+    // Foundry reuses a sheet's instance each time it opens: a new opening chooses its seat again.
     if ( options?.isFirstRender ) this.#adopted.delete(app);
     let seatKey = this.#adopted.get(app);
     if ( !seatKey ) {
