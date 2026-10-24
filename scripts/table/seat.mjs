@@ -437,15 +437,19 @@ export default class Seat {
     const panel = this.element.querySelector(".avtt-sheet");
     const actor = this.actor;
     if ( (this.state.panel !== "character") || !actor ) return;
+    // Only the latest render draws: an older one that finishes later (e.g. the Bio tab's enrichment) is dropped.
+    const draw = ++this.#sheetDraw;
     const context = {
       ...sheet.sheetContext(actor, this.state.sheetTab, id => `AVTT.Sheet.Tab.${id}`),
       state: this.state,
       levelUp: sys.levelInfo(actor)
     };
     await sheet.enrichSheet(context, actor);
+    const html = await renderTemplate(tpl("sheet"), context);
+    if ( draw !== this.#sheetDraw ) return;
     const scroll = panel.querySelector(".avtt-sheet-body")?.scrollTop ?? 0;
     const sameTab = this.#lastSheetTab === context.tab;
-    panel.innerHTML = await renderTemplate(tpl("sheet"), context);
+    panel.innerHTML = html;
     this.#fitSheetWidth(panel);
     // Keep the list's scroll position across data updates (a new tab starts at the top).
     const body = panel.querySelector(".avtt-sheet-body");
@@ -454,6 +458,7 @@ export default class Seat {
   }
 
   #lastSheetTab = null;
+  #sheetDraw = 0;
 
   /** The character panel's width (px) once drawn: wide enough for all its tabs on one line. */
   #sheetWidth = 0;
@@ -649,6 +654,8 @@ export default class Seat {
     // an attribute the prompt can't name rolls straight away below.
     if ( (action === "rollAbility") && sys.FEATURES.abilityRollPrompt && getSetting("askBoons") ) {
       const prompt = abilityRollPrompt(this.actor, target.dataset.ability);
+      // A second tap on the same attribute while its prompt is up doesn't queue another roll.
+      if ( prompt && this.prompts.has(p => p.local && (p.actor === prompt.actor) && (p.attribute === prompt.attribute)) ) return;
       if ( prompt ) return this.prompts.add(prompt);
     }
     if ( sheet.D20_ACTIONS.has(action) ) return this.#d20(mode => sheet.runSheetAction(this.actor, action, target.dataset, mode));

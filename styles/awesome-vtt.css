@@ -306,7 +306,7 @@ body.avtt-hand-mode.avtt-panning #board { cursor: grabbing; }
 .avtt-adv-scale-low { color: var(--avtt-dis); }
 .avtt-adv-scale-high { color: var(--avtt-adv); }
 /* SotDL's seven choices fill the panel's width: the heading on its own line, the buttons shared out evenly. */
-.avtt-dice-next-wide { flex-direction: column; align-items: stretch; }
+.avtt-dice-next.avtt-dice-next-wide { flex-direction: column; align-items: stretch; }
 .avtt-dice-next-wide .avtt-adv-pick, .avtt-segmented-wide { width: 100%; }
 .avtt-dice-next-wide .avtt-segmented button, .avtt-segmented-wide button { flex: 1 1 0; min-width: 0; padding-inline: 0; }
 .avtt-damage { border-color: var(--avtt-dis) !important; }
