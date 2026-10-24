@@ -1,5 +1,5 @@
 <div class="avtt-init-header">
-  {{#if turns.length}}
+  {{#if (or turns.length started)}}
   {{!-- Shows or hides the turn order below. --}}
   <button type="button" data-action="toggleInitiative" class="avtt-init-toggle">
     <i class="fa-solid fa-hourglass-half"></i>
@@ -7,7 +7,7 @@
     <i class="fa-solid {{#if open}}fa-chevron-down{{else}}fa-chevron-up{{/if}}"></i>
   </button>
   {{else}}
-  {{!-- Nobody in the encounter yet: nothing to show or hide, so a plain label that says what comes next. --}}
+  {{!-- Nobody in the encounter yet (not started): nothing to show or hide, so a plain label that says what comes next. --}}
   <span class="avtt-init-toggle avtt-init-waiting">
     <i class="fa-solid fa-hourglass-half" inert></i>
     <span>{{localize "AVTT.Initiative.NotStarted"}} · {{localize "AVTT.Initiative.Waiting"}}</span>

@@ -1,13 +1,12 @@
+import { SIDE_ROTATION } from "../constants.mjs";
+
 /**
  * Popups the browser draws outside the seats and windows, at the top of the page: Foundry's tooltips (#tooltip), its
  * fixed context menus (e.g. a window's ⋮ header menu, right-click menus) and Shadow of the Demon Lord's own tooltips
  * (tippy, `[data-tippy-root]`). When they belong to a seat, or to a window turned toward one, they are turned to face
  * that seat's player and placed beside what they belong to, as that player sees it: tooltips above it (toward the
- * table centre), menus below it.
+ * table centre), menus below it, or above when there is more room there.
  */
-
-/** The seat's turn, so that "down" points toward the player at that edge (see constants.mjs). */
-export const SIDE_ROTATION = { bottom: 0, top: 180, left: 90, right: -90 };
 
 /** Popups turned toward a seat carry its key, so what opens from them (a tooltip in a menu) is turned the same way. */
 const TURNED = "[data-avtt-turned-seat]";
@@ -23,6 +22,26 @@ export function seatKeyOf(element) {
 /** The side ("bottom", "top", "left", "right") of the seat an element belongs to, if any. */
 export function seatSide(element) {
   return seatKeyOf(element)?.split("-")[0] ?? null;
+}
+
+/** The seat of an element when it isn't the screen's own orientation (the bottom seats): {key, side}, else null. */
+function turnedSeat(element) {
+  const key = seatKeyOf(element);
+  const side = key?.split("-")[0];
+  return (side && (side !== "bottom")) ? { key, side } : null;
+}
+
+/** Space on screen beside `rect`, "down" or "up" as the player of `side` sees it. */
+function roomToward(rect, side, toward) {
+  const down = {
+    bottom: window.innerHeight - (rect.top + rect.height), top: rect.top,
+    left: rect.left, right: window.innerWidth - (rect.left + rect.width)
+  };
+  const up = {
+    bottom: rect.top, top: window.innerHeight - (rect.top + rect.height),
+    left: window.innerWidth - (rect.left + rect.width), right: rect.left
+  };
+  return (toward === "down") ? down[side] : up[side];
 }
 
 /**
@@ -45,8 +64,9 @@ export function placeBeside(rect, w, h, side, toward, pad = 5) {
     case "left": cx -= sign * ((rect.width / 2) + pad + (fw / 2)); break;
     case "right": cx += sign * ((rect.width / 2) + pad + (fw / 2)); break;
   }
-  cx = Math.clamp(cx, pad + (fw / 2), window.innerWidth - pad - (fw / 2));
-  cy = Math.clamp(cy, pad + (fh / 2), window.innerHeight - pad - (fh / 2));
+  // A box larger than the screen keeps its start edge on screen (Math.clamp would favour the far edge).
+  cx = Math.max(Math.min(cx, window.innerWidth - pad - (fw / 2)), pad + (fw / 2));
+  cy = Math.max(Math.min(cy, window.innerHeight - pad - (fh / 2)), pad + (fh / 2));
   return { left: cx - (w / 2), top: cy - (h / 2) };
 }
 
@@ -57,28 +77,52 @@ export function placeBeside(rect, w, h, side, toward, pad = 5) {
 /**
  * Foundry's fixed context menus are added to the page body, so they kept the screen's orientation even when opened
  * from a turned window. After core places one, a menu of a seat is turned toward it and placed below its target
- * (a header button) or the pointer (a right-click), as the player sees it. Call once on the table client.
+ * (a header button) or the pointer (a right-click), as the player sees it, or above when there is more room there,
+ * no longer than that room (it scrolls). Core's open animation is measured by the menu's own height, not its turned
+ * footprint. Call once on the table client.
  */
 export function installTurnedContextMenus() {
   const ContextMenu = foundry.applications.ux.ContextMenu;
-  const original = ContextMenu?.prototype._setFixedPosition;
-  if ( typeof original !== "function" ) return;
+  const setFixed = ContextMenu?.prototype._setFixedPosition;
+  const animate = ContextMenu?.prototype._animate;
+  if ( (typeof setFixed !== "function") || (typeof animate !== "function") ) return;
+
   ContextMenu.prototype._setFixedPosition = function(menu, target, options = {}) {
-    const result = original.call(this, menu, target, options);
-    const key = seatKeyOf(target);
-    const side = key?.split("-")[0];
-    if ( !side || (side === "bottom") || !menu.isConnected ) return result;
+    const result = setFixed.call(this, menu, target, options);
+    const seat = turnedSeat(target);
+    if ( !seat || !menu.isConnected ) return result;
     const { event } = options;
-    const atPointer = (this.relative !== "target") && event?.isTrusted && Number.isFinite(event.clientX);
+    // As core: a pointer position counts unless both are 0 on a synthetic event (dnd5e's ⋮ buttons send one).
+    const atPointer = (this.relative !== "target") && Number.isFinite(event?.clientX)
+      && (event.isTrusted || event.clientX || event.clientY);
     const rect = atPointer
       ? { left: event.clientX, top: event.clientY, width: 0, height: 0 }
       : target.getBoundingClientRect();
-    // Core's height limit and expand direction are for an unturned menu.
+    const pad = 2;
+    const down = roomToward(rect, seat.side, "down");
+    const up = roomToward(rect, seat.side, "up");
+    // Core's limits are for an unturned menu; the menu's own height lies along the player's down / up.
     Object.assign(menu.style, { maxHeight: "", bottom: "", right: "" });
-    const { left, top } = placeBeside(rect, menu.offsetWidth, menu.offsetHeight, side, "down", 2);
-    Object.assign(menu.style, { left: `${left}px`, top: `${top}px`, rotate: `${SIDE_ROTATION[side]}deg` });
-    menu.dataset.avttTurnedSeat = key;
+    const toward = ((menu.offsetHeight + pad) <= down) || (down >= up) ? "down" : "up";
+    menu.style.maxHeight = `${Math.max((toward === "down" ? down : up) - (2 * pad), 80)}px`;
+    const { left, top } = placeBeside(rect, menu.offsetWidth, menu.offsetHeight, seat.side, toward, pad);
+    Object.assign(menu.style, { left: `${left}px`, top: `${top}px`, rotate: `${SIDE_ROTATION[seat.side]}deg` });
+    menu.dataset.avttTurnedSeat = seat.key;
     return result;
+  };
+
+  ContextMenu.prototype._animate = async function(open = false) {
+    const el = this.element;
+    if ( !el?.dataset.avttTurnedSeat ) return animate.call(this, open);
+    // As core, measured by offsetHeight: the bounding box of a menu turned sideways is its width tall.
+    const height = el.offsetHeight;
+    const from = open ? "0" : `${height}px`;
+    const to = open ? `${height}px` : "0";
+    Object.assign(el.style, { height: from, padding: "0", overflow: "hidden" });
+    const win = el.ownerDocument.defaultView;
+    if ( !win || win.closed ) return;
+    await el.animate({ height: [from, to] }, { duration: 200, easing: "ease", fill: "forwards" })?.finished;
+    if ( open ) Object.assign(el.style, { height: "", padding: "", overflow: "" });
   };
 }
 
@@ -90,24 +134,24 @@ export function installTurnedContextMenus() {
  * The demonlord system shows its sheet tooltips with its own copy of tippy, which adds a `[data-tippy-root]` box to
  * the page body and places it with Popper (a `transform` on the box). For a box whose element is in a seat or a
  * turned window, each time Popper places it, it is turned toward the seat and moved above the element as the player
- * sees it. The arrow, drawn for the unturned placement, is hidden (CSS). Call once on the table client.
+ * sees it. The arrow, drawn for the unturned placement, is hidden (CSS). Its interactive dropdowns stay inside the
+ * window (tippy's appendTo "parent") and aren't handled. Call once on the table client.
  */
 export function installTurnedTippy() {
   const watched = new WeakSet();
   const turnedTransform = new WeakMap();
   const turn = root => {
-    const reference = root._tippy?.reference;
-    const key = seatKeyOf(reference);
-    const side = key?.split("-")[0];
-    if ( !side || (side === "bottom") || !reference.isConnected ) return;
-    const { left, top } = placeBeside(reference.getBoundingClientRect(), root.offsetWidth, root.offsetHeight, side, "up", 6);
     // Our own write is seen by the observer too: skip it (compared as the browser stores it), or it would loop.
     if ( root.style.transform === turnedTransform.get(root) ) return;
-    root.dataset.avttTurnedSeat = key;
+    const reference = root._tippy?.reference;
+    const seat = turnedSeat(reference);
+    if ( !seat || !reference.isConnected ) return;
+    const { left, top } = placeBeside(reference.getBoundingClientRect(), root.offsetWidth, root.offsetHeight, seat.side, "up", 6);
+    root.dataset.avttTurnedSeat = seat.key;
     // Popper places the box with inset 0 and a translate; the same, with the turn added.
     Object.assign(root.style, {
       inset: "0px auto auto 0px", transformOrigin: "center",
-      transform: `translate(${Math.round(left)}px, ${Math.round(top)}px) rotate(${SIDE_ROTATION[side]}deg)`
+      transform: `translate(${Math.round(left)}px, ${Math.round(top)}px) rotate(${SIDE_ROTATION[seat.side]}deg)`
     });
     turnedTransform.set(root, root.style.transform);
   };

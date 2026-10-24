@@ -38,6 +38,8 @@ Hooks.once("init", () => {
     `modules/${MODULE_ID}/templates/actions.hbs`,
     `modules/${MODULE_ID}/templates/spells.hbs`
   ]);
+  // SotDL's "Banes … Boons" line under the Next roll choice ({{> avttAdvScale}}): Dice panel and prompts.
+  foundry.applications.handlebars.loadTemplates({ avttAdvScale: `modules/${MODULE_ID}/templates/adv-scale.hbs` });
 });
 
 // Seated characters stay visible on the map (see table/visibility.mjs); installed before the map is first drawn.

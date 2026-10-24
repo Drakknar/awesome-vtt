@@ -1,5 +1,6 @@
 import { getSetting } from "../settings.mjs";
 import sys, { damageAction } from "../../../awesome-vtt-core/scripts/system.mjs";
+import { messageActor } from "../../../awesome-vtt-core/scripts/common.mjs";
 
 /**
  * Hooks on the table screen, around using an item's activity (dnd5e 6.x; in other systems only the roll results
@@ -71,7 +72,7 @@ export function registerUseChecks(overlay) {
   sys.rollDamageAfterAttacks(actor => getSetting("autoRoll") && (overlay.seatsFor(actor).length > 0));
 
   sys.onRollResult((result, message) => {
-    const actor = message.getAssociatedActor?.() ?? ChatMessage.getSpeakerActor(message.speaker);
+    const actor = messageActor(message);
     const seats = actor ? overlay.seatsFor(actor) : [];
     if ( !seats.length ) return;
     const notice = {
@@ -88,7 +89,7 @@ export function registerUseChecks(overlay) {
     // A player's roll from their phone (or desktop) for a seated character shows in its seat too; the GM's don't.
     others: message => {
       if ( message.author?.isGM ) return false;
-      const actor = message.getAssociatedActor?.() ?? ChatMessage.getSpeakerActor(message.speaker);
+      const actor = messageActor(message);
       return !!actor && (overlay.seatsFor(actor).length > 0);
     }
   });
