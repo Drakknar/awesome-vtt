@@ -244,7 +244,8 @@
       "Round": "Round",
       "NotStarted": "Combat not started",
       "Roll": "Roll initiative",
-      "EndTurn": "End turn"
+      "EndTurn": "End turn",
+      "Waiting": "waiting for the GM to add combatants"
     },
     "Turn": {
       "Banner": "Your turn, {name}!"
