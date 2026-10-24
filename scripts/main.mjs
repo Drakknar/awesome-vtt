@@ -91,7 +91,7 @@ function registerTableHooks() {
   });
 
   // Windows opened from a seat are rotated toward it; core UI is re-hidden when it re-renders.
-  Hooks.on("renderApplicationV2", (app, element) => overlay.onRenderApplication(app, element));
+  Hooks.on("renderApplicationV2", (app, element, context, options) => overlay.onRenderApplication(app, element, options));
 
   // Actor data shown in pills and sheets.
   onActorDataChange(doc => {

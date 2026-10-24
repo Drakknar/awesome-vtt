@@ -193,8 +193,12 @@ export default class TableOverlay {
     }
   }
 
-  /** Called from the generic ApplicationV2 render hook. */
-  onRenderApplication(app, element) {
+  /**
+   * Called from the generic ApplicationV2 render hook.
+   * @param {object} [options]  The render options: a window opened again (isFirstRender) chooses its seat again,
+   *   since Foundry reuses the same sheet instance each time it opens.
+   */
+  onRenderApplication(app, element, options) {
     if ( TableOverlay.#coreApps.includes(app) ) {
       this.applyCoreUI();
       return;
@@ -202,17 +206,32 @@ export default class TableOverlay {
     if ( !app.hasFrame || element.closest("#avtt-overlay") ) return;
 
     // Windows opened for a specific seat (e.g. the settings window) always face it, whatever "rotateWindows" says.
-    // Others face the seat interacted with just before, when "rotateWindows" is on.
+    // With "rotateWindows" on, a seated character's sheet (or one of its items) faces that character's seat, however
+    // it was opened (e.g. double-clicking its token); other windows face the seat interacted with just before.
+    if ( options?.isFirstRender ) this.#adopted.delete(app);
     let seatKey = this.#adopted.get(app);
     if ( !seatKey ) {
       if ( app.avttSeat && this.seats.has(app.avttSeat) ) seatKey = app.avttSeat;
-      else if ( getSetting("rotateWindows") ) seatKey = this.recentSeat?.seat.key;
+      else if ( getSetting("rotateWindows") ) seatKey = this.#ownerSeat(app) ?? this.recentSeat?.seat.key;
       if ( !seatKey ) return;
       this.#adopted.set(app, seatKey);
       // Wait a frame so the window has its final size before placing it.
       requestAnimationFrame(() => this.#placeWindow(app, seatKey));
     }
     this.#rotateWindow(element, seatKey);
+  }
+
+  /**
+   * The seat of the character a sheet belongs to (an actor sheet, or the sheet of an item it owns), or undefined.
+   * A character in several seats uses the one interacted with just before, if it is one of them.
+   */
+  #ownerSeat(app) {
+    const doc = app.document;
+    const actor = (doc instanceof Actor) ? doc : ((doc?.parent instanceof Actor) ? doc.parent : null);
+    const seats = actor ? this.seatsFor(actor) : [];
+    if ( !seats.length ) return undefined;
+    const recent = this.recentSeat;
+    return (seats.includes(recent) ? recent : seats[0]).seat.key;
   }
 
   #rotateWindow(element, seatKey) {

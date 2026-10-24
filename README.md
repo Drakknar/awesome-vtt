@@ -50,7 +50,7 @@ Each occupied seat shows:
 
 Across the whole table:
 
-- **Window rotation:** windows opened from a seat, such as roll dialogs, spell-slot dialogs, rest dialogs and journals, are rotated and moved toward that seat.
+- **Window rotation:** windows opened from a seat, such as roll dialogs, spell-slot dialogs, rest dialogs and journals, are rotated and moved toward that seat. A seated character's sheet, and its items' sheets, face that character's seat however they are opened, for example by double-clicking its token on the map. Each time a window opens again it faces the right seat for that opening.
 - **Optional hiding of the standard Foundry UI:** the sidebar, hotbar, player list, scene navigation, scene controls and chat pop-ups. They are hidden with CSS only. They take no space and can't be clicked, but they keep working in the background. The pill's Ruler button and the R key still work, for example. "Keep scene controls visible" brings the toolbar back if you want it.
 - **Keep the screen on:** stops the table screen from dimming or sleeping (per-browser setting, on by default; needs HTTPS).
 - **Idle transparency:** pills and the initiative strip fade while the mouse isn't over them, so the map stays visible. Set the level with **Idle pill opacity** (per browser). Open panels are always fully opaque, on a solid background, so they stay readable while a player uses them.
