@@ -191,8 +191,12 @@ export function installTurnedPopups() {
  * The demonlord system shows its sheet tooltips with its own copy of tippy, which adds a `[data-tippy-root]` box to
  * the page body and places it with Popper (a `transform` on the box). For a box whose element is in a seat or a
  * turned window, each time Popper places it, it is turned toward the seat and moved above the element as the player
- * sees it. The arrow, drawn for the unturned placement, is hidden (CSS). Its interactive dropdowns stay inside the
- * window (tippy's appendTo "parent") and aren't handled. Call once on the table client.
+ * sees it. The arrow, drawn for the unturned placement, is hidden (CSS). Call once on the table client.
+ *
+ * Its click dropdowns (the sheets' `.dl-new-project-2.dropdown` and `.dropdown-group`) hold the form's own radio
+ * inputs, so they must stay inside the window (tippy's appendTo "parent"), where they turn with it; but Popper places
+ * them in screen space, not knowing the window is turned. A Popper modifier added to each moves the box, after
+ * Popper's write, to just below its button in the window's own frame.
  */
 export function installTurnedTippy() {
   const watched = new WeakSet();
@@ -226,4 +230,50 @@ export function installTurnedTippy() {
       }
     }
   }).observe(document.body, { childList: true });
+
+  // The sheets create their dropdowns while rendering; the modifier is added before one is first opened.
+  Hooks.on("renderApplicationV2", (app, element) => {
+    for ( const reference of element.querySelectorAll(DROPDOWNS) ) {
+      const instance = reference._tippy;
+      const popperOptions = instance?.props.popperOptions ?? {};
+      if ( !instance || popperOptions.modifiers?.includes(TURNED_WINDOW_MODIFIER) ) continue;
+      instance.setProps({ popperOptions: { ...popperOptions, modifiers: [...(popperOptions.modifiers ?? []), TURNED_WINDOW_MODIFIER] } });
+    }
+  });
 }
+
+/** SotDL's click dropdowns (see installTurnedTippy). */
+const DROPDOWNS = ".dl-new-project-2.dropdown, .dropdown-group";
+
+/**
+ * After Popper writes the dropdown's translate (screen space), move it so its centre is just below its button in
+ * the turned window's own frame: the gap is worked out on screen, then turned back by the seat's rotation.
+ */
+const TURNED_WINDOW_MODIFIER = {
+  name: "avttTurnedWindow",
+  enabled: true,
+  phase: "afterWrite",
+  fn({ state }) {
+    const { popper: root, reference } = state.elements;
+    const seat = (reference instanceof Element) ? turnedSeat(reference) : null;
+    const moved = /translate(?:3d)?\(\s*(-?[\d.]+)px,\s*(-?[\d.]+)px/.exec(root.style.transform ?? "");
+    if ( !seat || !moved ) return;
+    const angle = SIDE_ROTATION[seat.side] * (Math.PI / 180);
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const centre = rect => ({ x: rect.left + (rect.width / 2), y: rect.top + (rect.height / 2) });
+    const rect = reference.getBoundingClientRect();
+    const button = centre(rect);
+    const box = centre(root.getBoundingClientRect());
+    // The window's scale (Foundry may scale it as well as our turn): the button's screen size over its own size.
+    const scale = (Math.max(rect.width, rect.height) / Math.max(reference.offsetWidth, reference.offsetHeight, 1)) || 1;
+    // Below the button in the window's frame is (0, d) there; on screen that is turned and scaled.
+    const d = scale * (reference.offsetHeight + root.offsetHeight) / 2;
+    const dx = (button.x - (d * sin)) - box.x;
+    const dy = (button.y + (d * cos)) - box.y;
+    // The same move in the window's frame (turned back, unscaled), added to Popper's translate.
+    const x = Number(moved[1]) + (((dx * cos) + (dy * sin)) / scale);
+    const y = Number(moved[2]) + (((dy * cos) - (dx * sin)) / scale);
+    root.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+  }
+};
