@@ -2,7 +2,7 @@
      phone. It shows as a chip on the player pill and resets after one roll. Each section below is divided by a line. --}}
 {{!-- The choices scroll when the seat has little room; the formula and the Roll button stay at the bottom. --}}
 <div class="avtt-dice-scroll">
-<div class="avtt-dice-next">
+<div class="avtt-dice-next {{#if advScale}}avtt-dice-next-wide{{/if}}">
   {{!-- SotDL: boons and banes, with the scale's two ends named under the choices. --}}
   <span>{{#if advScale}}{{advScale.title}}{{else}}{{localize "AVTT.Utility.Dice.NextRoll"}}{{/if}}</span>
   <div class="avtt-adv-pick">

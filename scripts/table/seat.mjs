@@ -21,7 +21,7 @@ const BUSY_ACTIONS = new Set([
   "rollAbility", "rollSave", "rollSkill", "deathSave", "useItem", "applyHp", "spellPrepare", "invToParty", "toggleFavorite", "toggleInspiration", "toggleCondition",
   "endConcentration", "exhaustion", "toggleEffect", "promptChoice", "chatSend",
   "shortRest", "longRest", "openFullSheet", "levelUp", "usesAdjust", "slotAdjust", "invQty", "invEquip", "invAttune", "invDetails",
-  "diceRoll", "compSearch", "compBrowse", "compMore", "compOpen", "compOpenSheet",
+  "diceRoll", "compSearch", "compBrowse", "compMore", "compOpen", "compOpenSheet", "compAddItem",
   "journalOpen", "journalShared", "journalPage", "journalFull", "rollInitiative", "turnSpeed", "endTurn", "focusToken", "trackAdjust"
 ]);
 
@@ -102,7 +102,9 @@ export default class Seat {
     this.render = foundry.utils.debounce(this.#renderNow.bind(this), 50);
     this.element = this.#build();
     const body = name => this.element.querySelector(`[data-body="${name}"]`);
-    this.compendium = new CompendiumPanel({ render: () => this.renderCompendium(), root: () => body("compendium") });
+    this.compendium = new CompendiumPanel({
+      render: () => this.renderCompendium(), root: () => body("compendium"), actor: () => this.actor
+    });
     // The party's shared inventory (its own module, optional), drawn into this seat's Party panel.
     const party = body("party");
     this.party = party ? coreUI.sharedInventory()?.mount(party, { actor: () => this.actor, device: "table" }) : null;
@@ -440,6 +442,7 @@ export default class Seat {
       state: this.state,
       levelUp: sys.levelInfo(actor)
     };
+    await sheet.enrichSheet(context, actor);
     const scroll = panel.querySelector(".avtt-sheet-body")?.scrollTop ?? 0;
     const sameTab = this.#lastSheetTab === context.tab;
     panel.innerHTML = await renderTemplate(tpl("sheet"), context);

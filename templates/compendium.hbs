@@ -3,7 +3,11 @@
   <div class="avtt-button-row">
     <button type="button" data-action="compBack"><i class="fa-solid fa-arrow-left" inert></i> {{localize "AVTT.Utility.Compendium.Back"}}</button>
     <button type="button" data-action="compOpenSheet"><i class="fa-solid fa-up-right-from-square" inert></i> {{localize "AVTT.Utility.Compendium.Open"}}</button>
+    {{#if entry.add}}
+    <button type="button" data-action="compAddItem" class="avtt-primary"><i class="fa-solid fa-plus" inert></i> {{localize "AVTT.Utility.Compendium.Add"}}</button>
+    {{/if}}
   </div>
+  {{#if entry.add.added}}<p class="avtt-muted">{{localize "AVTT.Utility.Compendium.Added" name=entry.add.name count=entry.add.added}}</p>{{/if}}
   <h3>{{#if entry.img}}<img src="{{entry.img}}" alt="">{{/if}}{{entry.name}}</h3>
   <div class="avtt-comp-content">{{{entry.html}}}</div>
 </div>

@@ -76,10 +76,22 @@ export function registerUseChecks(overlay) {
     if ( !seats.length ) return;
     const notice = {
       ...sys.rollNotice(result, NOTICE_LABELS), name: actor.name,
-      action: damageAction(result, message, getSetting("autoRoll"), game.i18n.localize("AVTT.Notice.RollDamage"))
+      // "Roll damage" only for rolls made here: a roll from the player's phone offers it on the phone.
+      action: message.isAuthor
+        ? damageAction(result, message, getSetting("autoRoll"), game.i18n.localize("AVTT.Notice.RollDamage"))
+        : undefined
     };
     seats.forEach(s => s.showNotice(notice));
-  }, { shared: true, enabled: () => getSetting("rollNotices") });
+  }, {
+    shared: true,
+    enabled: () => getSetting("rollNotices"),
+    // A player's roll from their phone (or desktop) for a seated character shows in its seat too; the GM's don't.
+    others: message => {
+      if ( message.author?.isGM ) return false;
+      const actor = message.getAssociatedActor?.() ?? ChatMessage.getSpeakerActor(message.speaker);
+      return !!actor && (overlay.seatsFor(actor).length > 0);
+    }
+  });
 }
 
 /* -------------------------------------------- */
