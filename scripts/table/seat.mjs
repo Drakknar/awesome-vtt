@@ -4,9 +4,9 @@ import sys from "../../../awesome-vtt-core/scripts/system.mjs";
 import { setTool, toggleTool, currentTool, zoom, resetZoom } from "./canvas-tools.mjs";
 import TableSettingsConfig from "../apps/table-settings.mjs";
 import { CompendiumPanel, JournalPanel } from "../../../awesome-vtt-core/scripts/panels.mjs";
-import { DicePanel, advModes, advModeChoices, advModeShort, advModeTone } from "../../../awesome-vtt-core/scripts/dice.mjs";
+import { DicePanel, advModes, advModeChoices, advModeScale, advModeShort, advModeTone } from "../../../awesome-vtt-core/scripts/dice.mjs";
 import * as sheet from "../../../awesome-vtt-core/scripts/sheet.mjs";
-import { PromptQueue } from "../../../awesome-vtt-core/scripts/prompts.mjs";
+import { PromptQueue, abilityRollPrompt } from "../../../awesome-vtt-core/scripts/prompts.mjs";
 import * as coreUI from "../../../awesome-vtt-core/scripts/ui.mjs";
 import Keypad from "./keypad.mjs";
 
@@ -583,7 +583,7 @@ export default class Seat {
 
   async renderDice() {
     const body = this.element.querySelector('[data-body="dice"]');
-    const html = await renderTemplate(tpl("dice"), { ...this.dice.context(), advModes: this.#advModes() });
+    const html = await renderTemplate(tpl("dice"), { ...this.dice.context(), advModes: this.#advModes(), advScale: advModeScale() });
     // Keep the scrolled position of the choices while dice are added or removed.
     const scroll = body.querySelector(".avtt-dice-scroll")?.scrollTop ?? 0;
     body.innerHTML = html;
@@ -642,6 +642,12 @@ export default class Seat {
     if ( CompendiumPanel.ACTIONS.has(action) ) return this.compendium.handle(action, target);
     if ( JournalPanel.ACTIONS.has(action) ) return this.journal.handle(action, target);
     if ( DicePanel.ACTIONS.has(action) ) return this.dice.handle(action, target.dataset);
+    // SotDL: an attribute asks for boons or banes first (per-browser setting), in a prompt preset to the Next roll;
+    // an attribute the prompt can't name rolls straight away below.
+    if ( (action === "rollAbility") && sys.FEATURES.abilityRollPrompt && getSetting("askBoons") ) {
+      const prompt = abilityRollPrompt(this.actor, target.dataset.ability);
+      if ( prompt ) return this.prompts.add(prompt);
+    }
     if ( sheet.D20_ACTIONS.has(action) ) return this.#d20(mode => sheet.runSheetAction(this.actor, action, target.dataset, mode));
     if ( sheet.SHEET_ACTIONS.has(action) ) {
       return sheet.runSheetAction(this.actor, action, target.dataset, "normal", { toggled: this.state.toggledEffects });

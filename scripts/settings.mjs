@@ -188,6 +188,15 @@ export function registerSettings() {
     });
   }
 
+  // SotDL: an attribute rolled from a seat's sheet asks for boons or banes first (only listed in SotDL worlds).
+  game.settings.register(MODULE_ID, "askBoons", {
+    name: "AVTT.Settings.AskBoons.Name",
+    hint: "AVTT.Settings.AskBoons.Hint",
+    scope: "client",
+    config: game.system.id === "demonlord",
+    type: new BooleanField({ initial: true })
+  });
+
   // Around using an action from a seat: checks before, the follow-up roll after, and the result notice.
   for ( const [key, name] of [["useChecks", "UseChecks"], ["autoRoll", "AutoRoll"], ["rollNotices", "RollNotices"]] ) {
     game.settings.register(MODULE_ID, key, {
