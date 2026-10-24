@@ -104,6 +104,10 @@
       "CloseOtherPanels": {
         "Name": "Close other seats' panels",
         "Hint": "Opening a panel in one seat closes the panels open in the other seats."
+      },
+      "AskAdvantage": {
+        "Name": "Ask for advantage",
+        "Hint": "Rolling an ability check, saving throw or skill from a seat's sheet first asks whether it has advantage or disadvantage, preset to the seat's Next roll choice."
       }
     },
     "SeatEditor": {

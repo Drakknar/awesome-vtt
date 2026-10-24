@@ -127,6 +127,63 @@ export function installTurnedContextMenus() {
 }
 
 /* -------------------------------------------- */
+/*  Popovers and modal dialogs                  */
+/* -------------------------------------------- */
+
+/** Inline styles a turned popup gets, cleared when it closes so the system's own placement works again. */
+const POPUP_STYLES = ["inset", "margin", "left", "top", "rotate", "maxHeight", "positionTryFallbacks"];
+
+/** Turn an open popup of a seat toward it, below `anchor` as the player sees it (or above, with more room). */
+function turnPopup(el, anchor) {
+  const seat = turnedSeat(anchor ?? el);
+  if ( !seat || !el.isConnected ) return;
+  const rect = (anchor ?? el.parentElement).getBoundingClientRect();
+  const pad = 4;
+  const down = roomToward(rect, seat.side, "down");
+  const up = roomToward(rect, seat.side, "up");
+  // Our own place, not the system's anchor positioning (dnd5e's breakdowns would flip it on overflow).
+  Object.assign(el.style, { inset: "auto", margin: "0", maxHeight: "", positionTryFallbacks: "none" });
+  const toward = ((el.offsetHeight + pad) <= down) || (down >= up) ? "down" : "up";
+  el.style.maxHeight = `${Math.max((toward === "down" ? down : up) - (2 * pad), 80)}px`;
+  const { left, top } = placeBeside(rect, el.offsetWidth, el.offsetHeight, seat.side, toward, pad);
+  Object.assign(el.style, { left: `${left}px`, top: `${top}px`, rotate: `${SIDE_ROTATION[seat.side]}deg` });
+  el.dataset.avttTurnedSeat = seat.key;
+}
+
+function unturnPopup(el) {
+  if ( !el.dataset.avttTurnedSeat ) return;
+  for ( const prop of POPUP_STYLES ) el.style[prop] = "";
+  delete el.dataset.avttTurnedSeat;
+}
+
+/**
+ * Popovers and modal dialogs are drawn in the page's top layer, outside the seat or window they belong to, so they
+ * kept the screen's orientation: dnd5e's roll breakdowns and damage target lists in a seat's chat, and its sheet's
+ * warnings dialog. When one of a seat opens, it is turned toward the seat and placed below what opened it (the roll
+ * or button; for a dialog, the button with the focus) as the player sees it. Call once on the table client.
+ */
+export function installTurnedPopups() {
+  // `toggle` doesn't bubble, but a capturing listener on the document still sees it.
+  document.addEventListener("toggle", event => {
+    const el = event.target;
+    if ( !(el instanceof HTMLElement) || !el.hasAttribute("popover") || (el.id === "tooltip") || (el.id === "context-menu") ) return;
+    if ( event.newState !== "open" ) return unturnPopup(el);
+    // A breakdown's invoker is the roll just before it; a damage target list sits inside its toggle.
+    turnPopup(el, el.previousElementSibling ?? el.parentElement);
+  }, { capture: true });
+
+  const showModal = HTMLDialogElement.prototype.showModal;
+  HTMLDialogElement.prototype.showModal = function(...args) {
+    const result = showModal.apply(this, args);
+    const active = document.activeElement;
+    const app = this.closest(".application");
+    turnPopup(this, (active && app?.contains(active)) ? active : this.parentElement);
+    this.addEventListener("close", () => unturnPopup(this), { once: true });
+    return result;
+  };
+}
+
+/* -------------------------------------------- */
 /*  Shadow of the Demon Lord's tooltips         */
 /* -------------------------------------------- */
 
