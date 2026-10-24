@@ -8,6 +8,8 @@ import { activateHandMode, onToolChange } from "./table/canvas-tools.mjs";
 import { registerUseChecks } from "./table/use-checks.mjs";
 import { closeStartupUserConfig, onActorDataChange, onChatChange, actorOf } from "../../awesome-vtt-core/scripts/ui.mjs";
 import { initPrompts } from "../../awesome-vtt-core/scripts/prompts.mjs";
+import { answerVisibility } from "../../awesome-vtt-core/scripts/vision.mjs";
+import { registerCoreSettings } from "../../awesome-vtt-core/scripts/settings.mjs";
 import { isSupported, markSystem } from "../../awesome-vtt-core/scripts/system.mjs";
 import { installSeatedVisibility, refreshSeatedTokens } from "./table/visibility.mjs";
 import { installSeatTooltips } from "./table/tooltips.mjs";
@@ -25,6 +27,7 @@ let overlay = null;
 Hooks.once("init", () => {
   markSystem();
   registerSettings();
+  registerCoreSettings();
   // Seat choice for every user (the phone module shows it in its Settings tab).
   game.modules.get(MODULE_ID).api = { movableActors, seatOf, seatOptions, moveSeat };
   registerFulfillment();
@@ -70,6 +73,8 @@ Hooks.once("ready", () => {
   game.modules.get(MODULE_ID).api.overlay = overlay;
   registerTableHooks();
   registerUseChecks(overlay);
+  // Phones without the map ask which creatures their character can see (target list); this screen draws its vision.
+  answerVisibility();
   // Prompts go to the seat of the character they are for.
   initPrompts({
     show: prompt => overlay.seatsFor(prompt.actor)[0]?.prompts.add(prompt),

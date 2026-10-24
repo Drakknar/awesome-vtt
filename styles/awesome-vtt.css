@@ -305,6 +305,10 @@ body.avtt-hand-mode.avtt-panning #board { cursor: grabbing; }
 .avtt-adv-scale { display: flex; justify-content: space-between; font-size: 0.75em; font-weight: bold; }
 .avtt-adv-scale-low { color: var(--avtt-dis); }
 .avtt-adv-scale-high { color: var(--avtt-adv); }
+/* SotDL's seven choices fill the panel's width: the heading on its own line, the buttons shared out evenly. */
+.avtt-dice-next-wide { flex-direction: column; align-items: stretch; }
+.avtt-dice-next-wide .avtt-adv-pick, .avtt-segmented-wide { width: 100%; }
+.avtt-dice-next-wide .avtt-segmented button, .avtt-segmented-wide button { flex: 1 1 0; min-width: 0; padding-inline: 0; }
 .avtt-damage { border-color: var(--avtt-dis) !important; }
 .avtt-heal { border-color: var(--avtt-adv) !important; }
 .avtt-seat .avtt-damage.selected { background: var(--avtt-dis); color: #111; font-weight: bold; }
@@ -431,6 +435,11 @@ body:not([data-avtt-system="dnd5e"]) .avtt-chat-log .chat-message .message-heade
 .avtt-comp-more { align-self: center; }
 .avtt-comp-entry h3 { display: flex; gap: 0.4em; align-items: center; margin: 0.3em 0; }
 .avtt-comp-entry h3 img { width: 2em; height: 2em; border: none; }
+/* SotDL Bio tab: label / value rows, then the description. */
+.avtt-bio-list { display: grid; grid-template-columns: auto 1fr; gap: 0.2em 0.6em; margin: 0.2em 0 0.5em; }
+.avtt-bio-list dt { color: var(--avtt-muted); }
+.avtt-bio-list dd { margin: 0; }
+.avtt-bio-text p { margin: 0.3em 0; }
 .avtt-comp-content { font-size: 0.9em; }
 .avtt-comp-content img { max-width: 100%; }
 

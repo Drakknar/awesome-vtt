@@ -13,7 +13,7 @@
 </div>
 {{/if}}
 {{#if modes}}
-<div class="avtt-segmented" role="radiogroup" aria-label="{{localize 'AVTT.Utility.Dice.NextRoll'}}">
+<div class="avtt-segmented {{#if scale}}avtt-segmented-wide{{/if}}" role="radiogroup" aria-label="{{localize 'AVTT.Utility.Dice.NextRoll'}}">
   {{#each modes}}
   <button type="button" data-action="advMode" data-mode="{{id}}" role="radio" class="avtt-adv-{{tone}} {{#if active}}selected{{/if}}"
           aria-checked="{{#if active}}true{{else}}false{{/if}}" aria-label="{{label}}" {{#unless (eq text label)}}data-tooltip=""{{/unless}}>{{text}}</button>

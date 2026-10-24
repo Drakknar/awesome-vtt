@@ -174,7 +174,8 @@
         "spells": "Spells",
         "abilities": "Abilities",
         "inventory": "Inventory",
-        "status": "Status"
+        "status": "Status",
+        "bio": "Bio"
       },
       "Level": "Level",
       "Normal": "Normal",
@@ -198,7 +199,8 @@
       "FullSheet": "Open full sheet",
       "About": "What {name} does",
       "Favorite": "Add {name} to favorites",
-      "Unfavorite": "Remove {name} from favorites"
+      "Unfavorite": "Remove {name} from favorites",
+      "NoBio": "No description yet."
     },
     "Utility": {
       "Chat": {
@@ -233,7 +235,9 @@
         "All": "Compendiums",
         "Empty": "This folder is empty.",
         "More": "Show more",
-        "None": "No compendiums available."
+        "None": "No compendiums available.",
+        "Add": "Add to inventory",
+        "Added": "Added to {name}'s inventory ({count})."
       }
     },
     "Initiative": {
