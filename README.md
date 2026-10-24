@@ -63,7 +63,8 @@ Across the whole table:
 The table also runs in **Shadow of the Demon Lord** worlds (system `demonlord` 6.1.x), with the same seats and panels showing SotDL's rules:
 
 - **Pill:** health left (the system counts damage taken), Defense, Perception, Speed and Healing rate, and a star while the character has Fortune.
-- **Next roll:** boons or banes, from 3 banes to 3 boons (−3 … +3), instead of advantage; it applies to the next challenge roll, attack, spell or talent from the seat, then resets.
+- **Next roll:** boons or banes, from 3 banes to 3 boons (−3 … +3), instead of advantage, headed **Boons and banes** with **Banes** and **Boons** named under the two ends; it applies to the next challenge roll, attack, spell or talent from the seat, then resets.
+- **Attribute rolls** from the seat's sheet first ask in the seat how many boons or banes the roll gets (preset to the Next roll), then roll. Turn off **Ask for boons and banes** (per-browser setting, on by default, shown only in SotDL worlds) to roll straight away with the Next roll.
 - **Sheet:** Actions (weapons in hand, talents, spells, usable gear), Spells (by tradition and rank, with castings left), Abilities (the five attributes, rolled as challenges), Inventory (gc, ss, cp, bits; worn items) and Status (afflictions). No Skills tab.
 - **Using things** rolls straight away with the Next roll, without the system's dialog: spells spend a casting, talents a use, weapons their ammunition (one attack per target), consumables one of their quantity. Afflictions that make an action fail stop it with the system's warning.
 - **Quick actions:** Fortune, action statuses (Defend, Concentrate, Prone, Help, Prepare), damage / healing, insanity and corruption − / +, effects, and Rest (8 hours or a full day, through the system's rest).

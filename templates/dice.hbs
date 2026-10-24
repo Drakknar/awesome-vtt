@@ -3,12 +3,16 @@
 {{!-- The choices scroll when the seat has little room; the formula and the Roll button stay at the bottom. --}}
 <div class="avtt-dice-scroll">
 <div class="avtt-dice-next">
-  <span>{{localize "AVTT.Utility.Dice.NextRoll"}}</span>
+  {{!-- SotDL: boons and banes, with the scale's two ends named under the choices. --}}
+  <span>{{#if advScale}}{{advScale.title}}{{else}}{{localize "AVTT.Utility.Dice.NextRoll"}}{{/if}}</span>
+  <div class="avtt-adv-pick">
   <div class="avtt-segmented" role="radiogroup" aria-label="{{localize 'AVTT.Utility.Dice.NextRoll'}}">
     {{#each advModes}}
     <button type="button" data-action="advMode" data-mode="{{id}}" role="radio" class="avtt-adv-{{tone}} {{#if active}}selected{{/if}}"
             aria-checked="{{#if active}}true{{else}}false{{/if}}" aria-label="{{label}}" {{#unless (eq text label)}}data-tooltip=""{{/unless}}>{{text}}</button>
     {{/each}}
+  </div>
+  {{#if advScale}}<div class="avtt-adv-scale" aria-hidden="true"><span class="avtt-adv-scale-low"><i class="fa-solid fa-arrow-left" inert></i> {{advScale.low}}</span><span class="avtt-adv-scale-high">{{advScale.high}} <i class="fa-solid fa-arrow-right" inert></i></span></div>{{/if}}
   </div>
 </div>
 {{!-- Dice pool: two dice per row, each with − count +. --}}

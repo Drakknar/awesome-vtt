@@ -93,6 +93,10 @@
         "Name": "Prompt for GM requests",
         "Hint": "When the GM requests a group rest, save or check (D&D 5e) or a challenge roll (Shadow of the Demon Lord) from a seated character, ask in their seat."
       },
+      "AskBoons": {
+        "Name": "Ask for boons and banes",
+        "Hint": "Shadow of the Demon Lord: rolling an attribute from a seat's sheet first asks how many boons or banes the roll gets, preset to the seat's Next roll choice."
+      },
       "AutoInitiative": {
         "Name": "Prompt for initiative",
         "Hint": "When a seated character is in the active encounter without initiative, ask in their seat (in Shadow of the Demon Lord: a fast or slow turn)."

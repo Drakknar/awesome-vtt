@@ -300,6 +300,11 @@ body.avtt-hand-mode.avtt-panning #board { cursor: grabbing; }
 .avtt-segmented button { border-radius: 0; }
 .avtt-segmented button:first-child { border-radius: 0.4em 0 0 0.4em; }
 .avtt-segmented button:last-child { border-radius: 0 0.4em 0.4em 0; border-left: none; }
+/* SotDL: the ends of the boons and banes choice, under it. */
+.avtt-adv-pick { display: flex; flex-direction: column; gap: 0.15em; }
+.avtt-adv-scale { display: flex; justify-content: space-between; font-size: 0.75em; font-weight: bold; }
+.avtt-adv-scale-low { color: var(--avtt-dis); }
+.avtt-adv-scale-high { color: var(--avtt-adv); }
 .avtt-damage { border-color: var(--avtt-dis) !important; }
 .avtt-heal { border-color: var(--avtt-adv) !important; }
 .avtt-seat .avtt-damage.selected { background: var(--avtt-dis); color: #111; font-weight: bold; }
