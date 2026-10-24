@@ -568,6 +568,8 @@ body:not([data-avtt-system="dnd5e"]) .avtt-chat-log .chat-message .message-heade
 #tooltip.avtt-tooltip-top { rotate: 180deg; }
 #tooltip.avtt-tooltip-left { rotate: 90deg; }
 #tooltip.avtt-tooltip-right { rotate: -90deg; }
+/* SotDL's tippy tooltips turned toward a seat (turned.mjs): the arrow was drawn for the unturned placement. */
+[data-tippy-root][data-avtt-turned-seat] .tippy-arrow { display: none; }
 
 /* ---------- Windows rotated toward a seat ---------- */
 

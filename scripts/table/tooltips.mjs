@@ -9,38 +9,17 @@
  * of a seat, the rotation class is added and the tooltip is placed by its turned footprint.
  */
 
-/** The side ("bottom", "top", "left", "right") of the seat an element belongs to, if any. */
-function seatSide(element) {
-  const key = element?.closest?.(".avtt-seat")?.dataset.seat
-    ?? element?.closest?.(".application.avtt-rotated[data-avtt-seat]")?.dataset.avttSeat;
-  return key ? key.split("-")[0] : null;
-}
+import { seatSide, placeBeside } from "./turned.mjs";
 
 /**
  * Place the tooltip next to the element, toward the table centre as the seat's player sees it. The tooltip is turned
- * around its own centre by CSS (avtt-tooltip-<side>), so for the left and right seats its footprint on screen is its
- * height wide and its width tall.
+ * around its own centre by CSS (avtt-tooltip-<side>).
  */
 function placeTurned(manager, side) {
   const tooltip = manager.tooltip;
-  const rect = manager.element.getBoundingClientRect();
   const pad = manager.constructor.TOOLTIP_MARGIN_PX ?? 5;
-  const w = tooltip.offsetWidth;
-  const h = tooltip.offsetHeight;
-  const sideways = (side === "left") || (side === "right");
-  const fw = sideways ? h : w;
-  const fh = sideways ? w : h;
-  let cx = rect.left + (rect.width / 2);
-  let cy = rect.top + (rect.height / 2);
-  switch ( side ) {
-    case "bottom": cy = rect.top - pad - (fh / 2); break;
-    case "top": cy = rect.bottom + pad + (fh / 2); break;
-    case "left": cx = rect.right + pad + (fw / 2); break;
-    case "right": cx = rect.left - pad - (fw / 2); break;
-  }
-  cx = Math.clamp(cx, pad + (fw / 2), window.innerWidth - pad - (fw / 2));
-  cy = Math.clamp(cy, pad + (fh / 2), window.innerHeight - pad - (fh / 2));
-  Object.assign(tooltip.style, { left: `${cx - (w / 2)}px`, top: `${cy - (h / 2)}px`, right: "", bottom: "" });
+  const { left, top } = placeBeside(manager.element.getBoundingClientRect(), tooltip.offsetWidth, tooltip.offsetHeight, side, "up", pad);
+  Object.assign(tooltip.style, { left: `${left}px`, top: `${top}px`, right: "", bottom: "" });
   tooltip.classList.remove("text-left", "text-right");
   tooltip.classList.add("text-center");
 }
