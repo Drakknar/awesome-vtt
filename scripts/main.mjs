@@ -92,7 +92,8 @@ Hooks.once("ready", () => {
 });
 
 /**
- * Register the table screen's hooks: refreshes, windows opened from seats, and the actor data, initiative and chat the seats show.
+ * Register the table screen's hooks: refreshes, windows opened from seats, and the actor data, initiative and
+ * chat the seats show.
  */
 function registerTableHooks() {
   Hooks.on(`${MODULE_ID}.refresh`, () => {
