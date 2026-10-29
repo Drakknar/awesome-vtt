@@ -5,9 +5,15 @@ import { setKeepAwake } from "../../awesome-vtt-core/scripts/wake-lock.mjs";
 
 const { BooleanField, NumberField, StringField, ObjectField } = foundry.data.fields;
 
-/** Notify the rest of the module that something changed which requires a refresh. */
+/**
+ * Notify the rest of the module that something changed which requires a refresh.
+ * @returns {boolean}
+ */
 const refresh = () => Hooks.callAll(`${MODULE_ID}.refresh`);
 
+/**
+ * Register the module's settings and settings menus.
+ */
 export function registerSettings() {
   game.settings.registerMenu(MODULE_ID, "seatEditor", {
     name: "AVTT.Settings.SeatEditor.Name",
@@ -222,7 +228,10 @@ export function registerSettings() {
 
 export const getSetting = key => game.settings.get(MODULE_ID, key);
 
-/** Is the current client the table screen? */
+/**
+ * Is the current client the table screen?
+ * @returns {boolean}
+ */
 export function isTableClient() {
   const id = getSetting("tableUser");
   return !!id && game.user.id === id;

@@ -26,10 +26,14 @@ export default class Keypad {
 
   /** @type {HTMLInputElement|null} */
   input = null;
+
   /** @type {HTMLElement|null} */
   element = null;
+
   #initial = "";
+
   #fresh = true;
+
   #hold = null;
 
   #onFocusIn(event) {
@@ -61,7 +65,11 @@ export default class Keypad {
     }
   }
 
-  /** The field's name, for the pad's title: its label, else its aria-label, else the pad's own name. */
+  /**
+   * The field's name, for the pad's title: its label, else its aria-label, else the pad's own name.
+   * @param {HTMLInputElement} input
+   * @returns {string}
+   */
   #fieldName(input) {
     const label = input.closest("label")?.textContent.trim() || input.getAttribute("aria-label");
     return label || this.labels.pad;
@@ -124,7 +132,10 @@ export default class Keypad {
     this.#set(value);
   }
 
-  /** Put a value in the field, kept within its min and max. */
+  /**
+   * Put a value in the field, kept within its min and max.
+   * @param {string|number} value
+   */
   #set(value) {
     const input = this.input;
     if ( value !== "" ) {

@@ -6,7 +6,11 @@ export const PAD_TEMPLATE = `modules/${MODULE_ID}/templates/dice-pad.hbs`;
 /** Dice with more faces than this get no face buttons (except d100, which gets a tens/units pad). */
 const MAX_FACE_BUTTONS = 20;
 
-/** Keypad context for a die with the given number of faces, or null when the value must be typed. */
+/**
+ * Keypad context for a die with the given number of faces, or null when the value must be typed.
+ * @param {number} faces
+ * @returns {object|null}
+ */
 export function padContext(faces) {
   if ( faces === 100 ) {
     const digits = [...Array(10).keys()];
@@ -20,7 +24,12 @@ export function padContext(faces) {
   return null;
 }
 
-/** Validate a result for a die: an integer between 1 and the number of faces, or null. */
+/**
+ * Validate a result for a die: an integer between 1 and the number of faces, or null.
+ * @param {unknown} value
+ * @param {number} faces
+ * @returns {number|null}
+ */
 export function parseResult(value, faces) {
   if ( value === "" || value === null || value === undefined ) return null;
   const n = Number(value);
@@ -30,6 +39,9 @@ export function parseResult(value, faces) {
 /**
  * Put a value in the first empty input of a term's fieldset.
  * Inputs added for rerolls or explosions have their own confirm button, which is clicked so the roll continues.
+ * @param {HTMLElement|null} root
+ * @param {string} termId
+ * @param {number|string} value
  * @returns {HTMLInputElement|null}  The filled input, or null if every input already has a value.
  */
 export function fillSlot(root, termId, value) {
@@ -42,18 +54,29 @@ export function fillSlot(root, termId, value) {
   return input;
 }
 
-/** Clear every editable input, so a mis-click can be corrected before confirming. */
+/**
+ * Clear every editable input, so a mis-click can be corrected before confirming.
+ * @param {HTMLElement} root
+ */
 export function clearSlots(root) {
   for ( const input of root.querySelectorAll("fieldset[data-term-id] input:not(:disabled, [readonly])") ) input.value = "";
   for ( const fieldset of root.querySelectorAll("fieldset[data-tens]") ) resetTens(fieldset);
 }
 
+/**
+ * Forget the tens picked for a percentile die, and unmark its tens buttons.
+ * @param {HTMLFieldSetElement} fieldset
+ */
 function resetTens(fieldset) {
   delete fieldset.dataset.tens;
   for ( const b of fieldset.querySelectorAll("[data-tens]") ) b.classList.remove("active");
 }
 
-/** Handle a click on a keypad button. */
+/**
+ * Handle a click on a keypad button.
+ * @param {HTMLElement} root
+ * @param {HTMLElement} target
+ */
 export function onPadClick(root, target) {
   const fieldset = target.closest("fieldset[data-term-id]");
   if ( !fieldset ) return;

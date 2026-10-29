@@ -36,7 +36,10 @@ export default class TableOverlay {
     window.addEventListener("resize", foundry.utils.debounce(() => this.layout(), 100));
   }
 
-  /** The seat interacted with in the last few seconds, if any. */
+  /**
+   * The seat interacted with in the last few seconds, if any.
+   * @returns {import("./seat.mjs").default|null}
+   */
   get recentSeat() {
     if ( Date.now() - this.#lastSeat.time > WINDOW_ADOPT_MS ) return null;
     return this.seats.get(this.#lastSeat.key) ?? null;
@@ -118,6 +121,7 @@ export default class TableOverlay {
    * Room (px) along its edge for a seat's open panels, centred on the seat: up to the panels open in the neighbouring
    * seats of the same edge (or the corners kept for the next edge's pills, or the screen's end).
    * @param {import("./seat.mjs").default} seat
+   * @returns {number}
    */
   freeSpan(seat) {
     const { side, along } = seat.seat;
@@ -140,6 +144,7 @@ export default class TableOverlay {
   /**
    * A seat opened a panel: with the "Close other panels" setting, the other seats' panels close; otherwise a seat
    * showing quick actions next to another panel keeps only the other one if the new panel leaves it no room.
+   * @param {import("./seat.mjs").default} opened
    */
   #onPanelOpened(opened) {
     const closeOthers = getSetting("closeOtherPanels");
@@ -154,7 +159,11 @@ export default class TableOverlay {
     for ( const s of this.seats.values() ) s.render();
   }
 
-  /** Seats showing a given actor. */
+  /**
+   * Seats showing a given actor.
+   * @param {Actor|null} actor
+   * @returns {import("./seat.mjs").default[]}
+   */
   seatsFor(actor) {
     return [...this.seats.values()].filter(s => s.config.actorId === actor?.id);
   }
@@ -178,6 +187,7 @@ export default class TableOverlay {
   /**
    * Core UI applications hidden in table mode. They are hidden with CSS only: they keep rendering and stay
    * controllable from code (e.g. the ruler via ui.controls), but take no space and cannot be clicked.
+   * @returns {ApplicationV2[]}
    */
   static get #coreApps() {
     return [ui.sidebar, ui.hotbar, ui.players, ui.nav, ui.controls].filter(Boolean);
@@ -193,7 +203,12 @@ export default class TableOverlay {
     }
   }
 
-  /** Called from the generic ApplicationV2 render hook (options: its render options). */
+  /**
+   * Called from the generic ApplicationV2 render hook (options: its render options).
+   * @param {ApplicationV2} app
+   * @param {HTMLElement} element
+   * @param {object} options
+   */
   onRenderApplication(app, element, options) {
     if ( TableOverlay.#coreApps.includes(app) ) {
       this.applyCoreUI();
@@ -221,6 +236,8 @@ export default class TableOverlay {
   /**
    * The seat of the character a sheet belongs to (an actor sheet, or the sheet of an item it owns), or undefined.
    * A character in several seats uses the one interacted with just before, if it is one of them.
+   * @param {ApplicationV2} app
+   * @returns {string|undefined}
    */
   #ownerSeat(app) {
     const doc = app.document;
@@ -242,7 +259,11 @@ export default class TableOverlay {
     element.style.rotate = `${seat.seat.rotation}deg`;
   }
 
-  /** Move a window next to its seat, with its bottom edge facing the player. */
+  /**
+   * Move a window next to its seat, with its bottom edge facing the player.
+   * @param {ApplicationV2} app
+   * @param {string} seatKey
+   */
   #placeWindow(app, seatKey) {
     const seat = this.seats.get(seatKey);
     const el = app.element;
@@ -260,14 +281,14 @@ export default class TableOverlay {
     const h = el.offsetHeight;
     // The window's own height always lies along the inward direction, whatever the rotation.
     const inset = 110 * getSetting("uiScale");
-    let cx = x + nx * (inset + h / 2);
-    let cy = y + ny * (inset + h / 2);
+    let cx = x + (nx * (inset + (h / 2)));
+    let cy = y + (ny * (inset + (h / 2)));
     // Keep the rotated footprint on screen.
     const horizontal = ny !== 0;
     const halfX = (horizontal ? w : h) / 2;
     const halfY = (horizontal ? h : w) / 2;
     cx = Math.clamp(cx, halfX, window.innerWidth - halfX);
     cy = Math.clamp(cy, halfY, window.innerHeight - halfY);
-    app.setPosition({ left: cx - w / 2, top: cy - h / 2 });
+    app.setPosition({ left: cx - (w / 2), top: cy - (h / 2) });
   }
 }

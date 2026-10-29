@@ -11,7 +11,11 @@ import { SIDE_ROTATION } from "../constants.mjs";
 /** Popups turned toward a seat carry its key, so what opens from them (a tooltip in a menu) is turned the same way. */
 const TURNED = "[data-avtt-turned-seat]";
 
-/** The key of the seat an element belongs to (a seat, a window or popup turned toward one), if any. */
+/**
+ * The key of the seat an element belongs to (a seat, a window or popup turned toward one), if any.
+ * @param {Element|null|undefined} element
+ * @returns {string|null}
+ */
 export function seatKeyOf(element) {
   return element?.closest?.(".avtt-seat")?.dataset.seat
     ?? element?.closest?.(".application.avtt-rotated[data-avtt-seat]")?.dataset.avttSeat
@@ -19,19 +23,33 @@ export function seatKeyOf(element) {
     ?? null;
 }
 
-/** The side ("bottom", "top", "left", "right") of the seat an element belongs to, if any. */
+/**
+ * The side ("bottom", "top", "left", "right") of the seat an element belongs to, if any.
+ * @param {Element|null|undefined} element
+ * @returns {string|null}
+ */
 export function seatSide(element) {
   return seatKeyOf(element)?.split("-")[0] ?? null;
 }
 
-/** The seat of an element when it isn't the screen's own orientation (the bottom seats): {key, side}, else null. */
+/**
+ * The seat of an element when it isn't the screen's own orientation (the bottom seats): {key, side}, else null.
+ * @param {Element|null|undefined} element
+ * @returns {{key: string, side: string}|null}
+ */
 function turnedSeat(element) {
   const key = seatKeyOf(element);
   const side = key?.split("-")[0];
   return (side && (side !== "bottom")) ? { key, side } : null;
 }
 
-/** Space on screen beside `rect`, "down" or "up" as the player of `side` sees it. */
+/**
+ * Space on screen beside `rect`, "down" or "up" as the player of `side` sees it.
+ * @param {DOMRect} rect
+ * @param {string} side
+ * @param {"up"|"down"} toward
+ * @returns {number}
+ */
 function roomToward(rect, side, toward) {
   const down = {
     bottom: window.innerHeight - (rect.top + rect.height), top: rect.top,
@@ -48,6 +66,12 @@ function roomToward(rect, side, toward) {
  * Where to put a w × h box, turned around its own centre for `side`, beside `rect`: "up" or "down" as that seat's
  * player sees it, centred along the other axis and kept on screen. For the left and right seats its footprint on
  * screen is its height wide and its width tall.
+ * @param {DOMRect} rect
+ * @param {number} w
+ * @param {number} h
+ * @param {string} side
+ * @param {"up"|"down"} toward
+ * @param {number} pad
  * @returns {{left: number, top: number}}  The unturned box's top-left corner.
  */
 export function placeBeside(rect, w, h, side, toward, pad = 5) {
@@ -133,7 +157,11 @@ export function installTurnedContextMenus() {
 /** Inline styles a turned popup gets, cleared when it closes so the system's own placement works again. */
 const POPUP_STYLES = ["inset", "margin", "left", "top", "rotate", "maxHeight", "positionTryFallbacks"];
 
-/** Turn an open popup of a seat toward it, below `anchor` as the player sees it (or above, with more room). */
+/**
+ * Turn an open popup of a seat toward it, below `anchor` as the player sees it (or above, with more room).
+ * @param {HTMLElement} el
+ * @param {Element|null} anchor
+ */
 function turnPopup(el, anchor) {
   const seat = turnedSeat(anchor ?? el);
   if ( !seat || !el.isConnected ) return;
@@ -150,6 +178,10 @@ function turnPopup(el, anchor) {
   el.dataset.avttTurnedSeat = seat.key;
 }
 
+/**
+ * Undo turnPopup: the popup goes back to its own place and orientation.
+ * @param {HTMLElement} el
+ */
 function unturnPopup(el) {
   if ( !el.dataset.avttTurnedSeat ) return;
   for ( const prop of POPUP_STYLES ) el.style[prop] = "";
@@ -237,7 +269,8 @@ export function installTurnedTippy() {
       const instance = reference._tippy;
       const popperOptions = instance?.props.popperOptions ?? {};
       if ( !instance || popperOptions.modifiers?.includes(TURNED_WINDOW_MODIFIER) ) continue;
-      instance.setProps({ popperOptions: { ...popperOptions, modifiers: [...(popperOptions.modifiers ?? []), TURNED_WINDOW_MODIFIER] } });
+      const modifiers = [...(popperOptions.modifiers ?? []), TURNED_WINDOW_MODIFIER];
+      instance.setProps({ popperOptions: { ...popperOptions, modifiers } });
     }
   });
 }

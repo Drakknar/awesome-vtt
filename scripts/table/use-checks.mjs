@@ -21,11 +21,16 @@ import { messageActor } from "../../../awesome-vtt-core/scripts/common.mjs";
  */
 
 /**
+ * Register the checks and notices for actions used from a seat (see above).
  * @param {import("./overlay.mjs").default} overlay
  */
 export function registerUseChecks(overlay) {
 
-  /** Show a notice in the actor's seats, or as a normal notification if the actor isn't seated. */
+  /**
+   * Show a notice in the actor's seats, or as a normal notification if the actor isn't seated.
+   * @param {Actor} actor
+   * @param {object} notice
+   */
   const notify = (actor, notice) => {
     const seats = overlay.seatsFor(actor);
     if ( seats.length ) seats.forEach(s => s.showNotice(notice));
@@ -97,7 +102,11 @@ export function registerUseChecks(overlay) {
 
 /* -------------------------------------------- */
 
-/** Targets on the table are picked on the map before use; areas are placed on the map after use. */
+/**
+ * Targets on the table are picked on the map before use; areas are placed on the map after use.
+ * @param {Activity} activity
+ * @returns {{text: string, detail: string}|null}
+ */
 function missingTargets(activity) {
   if ( !sys.needsTargets(activity) || game.user.targets.size ) return null;
   return {
@@ -106,7 +115,11 @@ function missingTargets(activity) {
   };
 }
 
-/** The seat notice for a problem found by the core's usageProblem(). */
+/**
+ * The seat notice for a problem found by the core's usageProblem().
+ * @param {object|null} problem
+ * @returns {{text: string, detail: string}|null}
+ */
 function describeProblem(problem) {
   if ( !problem ) return null;
   const { reason, ...data } = problem;
@@ -114,7 +127,11 @@ function describeProblem(problem) {
   return { text: game.i18n.localize(`AVTT.Checks.${key}`), detail: game.i18n.format(`AVTT.Checks.${key}Hint`, data) };
 }
 
-/** Label keys for the words of a roll notice (see the core's rollNotice). */
+/**
+ * Label keys for the words of a roll notice (see the core's rollNotice).
+ * @param {string} id
+ * @returns {string|undefined}
+ */
 const NOTICE_LABELS = id => ({
   damage: "AVTT.Notice.Damage", healing: "AVTT.Notice.Healing", critical: "AVTT.Notice.Critical", fumble: "AVTT.Notice.Fumble",
   success: "AVTT.Notice.Success", failure: "AVTT.Notice.Failure", hit: "AVTT.Notice.Hit", miss: "AVTT.Notice.Miss",
