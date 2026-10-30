@@ -21,6 +21,7 @@ export default class TableSettingsConfig extends SettingsConfig {
   /**
    * Open the window for a seat. Opening it again from the same seat closes it; from another seat it turns to face it.
    * @param {string} seatKey
+   * @returns {Promise<TableSettingsConfig|undefined>}
    */
   static async toggle(seatKey) {
     const open = TableSettingsConfig.#instance;

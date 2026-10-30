@@ -14,6 +14,8 @@ import { seatSide, placeBeside } from "./turned.mjs";
 /**
  * Place the tooltip next to the element, toward the table centre as the seat's player sees it. The tooltip is turned
  * around its own centre by CSS (avtt-tooltip-<side>).
+ * @param {TooltipManager} manager
+ * @param {string} side
  */
 function placeTurned(manager, side) {
   const tooltip = manager.tooltip;

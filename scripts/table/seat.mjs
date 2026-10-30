@@ -34,6 +34,7 @@ const NOTICE_ACTION_MS = 30000;
 /**
  * Panels of a seat: quick actions (from the player pill) and the sections (section bar; "party" while the shared
  * inventory module is active). One section at a time; quick actions may stay open next to it when there is room.
+ * @returns {string[]}
  */
 const panels = () => ["quick", ...coreUI.sectionList()];
 
@@ -41,7 +42,11 @@ const panels = () => ["quick", ...coreUI.sectionList()];
 const PANEL_EM = { quick: 25, character: 24, other: 22, gap: 0.5 };
 const ADV_LABELS = { normal: "AVTT.Sheet.Normal", adv: "AVTT.Sheet.Advantage", dis: "AVTT.Sheet.Disadvantage" };
 
-/** Horizontal padding plus border of an element (px). */
+/**
+ * Horizontal padding plus border of an element (px).
+ * @param {HTMLElement} el
+ * @returns {number}
+ */
 function horizontalFrame(el) {
   const cs = getComputedStyle(el);
   return ["paddingLeft", "paddingRight", "borderLeftWidth", "borderRightWidth"].reduce((sum, k) => sum + (parseFloat(cs[k]) || 0), 0);
@@ -49,6 +54,11 @@ function horizontalFrame(el) {
 
 /** Natural width (px) of a button with an icon above a label, independent of its current layout. */
 let measureContext = null;
+/**
+ * Natural width (px) of a button with an icon above a label, from its text, whatever its current layout.
+ * @param {HTMLElement} button
+ * @returns {number}
+ */
 function naturalButtonWidth(button) {
   const frame = horizontalFrame(button);
   const label = button.querySelector("span");
@@ -183,12 +193,15 @@ export default class Seat {
     this.element.style.setProperty("--seat-depth", `${(horizontal ? H : W) / 2}px`);
   }
 
-  /** Screen-space anchor and inward direction, used to place windows opened from this seat. */
+  /**
+   * Screen-space anchor and inward direction, used to place windows opened from this seat.
+   * @returns {{x: number, y: number, nx: number, ny: number}}
+   */
   get anchor() {
     const r = this.element.getBoundingClientRect();
     const { side } = this.seat;
-    const cx = r.left + r.width / 2;
-    const cy = r.top + r.height / 2;
+    const cx = r.left + (r.width / 2);
+    const cy = r.top + (r.height / 2);
     switch ( side ) {
       case "bottom": return { x: cx, y: window.innerHeight, nx: 0, ny: -1 };
       case "top": return { x: cx, y: 0, nx: 0, ny: 1 };
@@ -236,7 +249,7 @@ export default class Seat {
         id, icon: coreUI.SECTION_ICONS[id], label: game.i18n.localize(`AVTT.Sections.${id}`), active: id === this.state.panel
       })),
       rollMode: (this.state.advMode === "normal") ? null : {
-        // dnd5e: "adv" / "dis"; SotDL: boons ("boon2") or banes, shown green or red.
+        // In dnd5e "adv" / "dis"; in SotDL boons ("boon2") or banes, shown green or red.
         id: this.state.advMode,
         tone: advModeTone(this.state.advMode),
         short: advModeShort({ adv: "AVTT.Pill.AdvShort.adv", dis: "AVTT.Pill.AdvShort.dis" }, this.state.advMode),
@@ -273,6 +286,7 @@ export default class Seat {
    * Width (px) the pill needs to show each button row on one line: the map tools at their natural width, and the
    * sections all as wide as the widest labelled one (they share the row equally). The widest row plus the pill's
    * padding and border; never less than the pill's standard width.
+   * @returns {number}
    */
   measurePillNeed() {
     const pill = this.element.querySelector(".avtt-pill");
@@ -302,7 +316,10 @@ export default class Seat {
     return Math.ceil(Math.max(natural + frame, standard));
   }
 
-  /** Height (px) of the pill, i.e. how far it reaches in from its edge, with its folded rows shown. */
+  /**
+   * Height (px) of the pill, i.e. how far it reaches in from its edge, with its folded rows shown.
+   * @returns {number}
+   */
   get pillDepth() {
     const pill = this.element.querySelector(".avtt-pill");
     const more = pill?.querySelector(".avtt-pill-more");
@@ -341,7 +358,13 @@ export default class Seat {
     await Promise.all(drawn);
   }
 
-  /** Width (px) the open panels take along the edge (0 when none is open). */
+  /**
+   * Width (px) the open panels take along the edge (0 when none is open).
+   * @param {object} root0
+   * @param {boolean} root0.quick
+   * @param {string|null} root0.panel
+   * @returns {number}
+   */
   drawersWidth({ quick = this.state.quick, panel = this.state.panel } = {}) {
     const em = parseFloat(getComputedStyle(this.element).fontSize) || 14;
     let width = (quick ? PANEL_EM.quick : 0) * em;
@@ -352,12 +375,21 @@ export default class Seat {
     return width;
   }
 
-  /** Is there room on the table to show quick actions next to this section panel? */
+  /**
+   * Is there room on the table to show quick actions next to this section panel?
+   * @param {string} panel
+   * @returns {boolean}
+   */
   fitsSideBySide(panel) {
     return this.drawersWidth({ quick: true, panel }) <= (this.freeSpan?.() ?? 0);
   }
 
-  /** Close this seat's panels (all, or only quick actions). */
+  /**
+   * Close this seat's panels (all, or only quick actions).
+   * @param {object} root0
+   * @param {boolean} root0.quickOnly
+   * @returns {Promise<void>|undefined}
+   */
   closePanels({ quickOnly = false } = {}) {
     const s = this.state;
     if ( !s.quick && (quickOnly || !s.panel) ) return;
@@ -378,6 +410,8 @@ export default class Seat {
   /**
    * Open a panel, or close it if it is open. One section panel at a time; quick actions stay open next to it while
    * the table has room for both (see fitsSideBySide), otherwise opening one closes the other.
+   * @param {string} panel
+   * @returns {Promise<unknown>|undefined}
    */
   #togglePanel(panel) {
     if ( !panels().includes(panel) ) return;
@@ -418,7 +452,10 @@ export default class Seat {
     if ( input ) input.value = amount;
   }
 
-  /** The automation prompt waiting for this seat's player, if any. */
+  /**
+   * The automation prompt waiting for this seat's player, if any.
+   * @returns {Promise<void>}
+   */
   async renderPrompt() {
     const el = this.element.querySelector(".avtt-prompt");
     const prompt = this.prompts.current;
@@ -428,7 +465,10 @@ export default class Seat {
     el.innerHTML = await renderTemplate(tpl("prompt"), this.prompts.context(this.#advModes()));
   }
 
-  /** The Normal / Advantage / Disadvantage choice for the next d20 roll (Dice panel and prompts). */
+  /**
+   * The Normal / Advantage / Disadvantage choice for the next d20 roll (Dice panel and prompts).
+   * @returns {object[]}
+   */
   #advModes() {
     return advModeChoices(ADV_LABELS, this.state.advMode);
   }
@@ -458,6 +498,7 @@ export default class Seat {
   }
 
   #lastSheetTab = null;
+
   #sheetDraw = 0;
 
   /** The character panel's width (px) once drawn: wide enough for all its tabs on one line. */
@@ -466,6 +507,7 @@ export default class Seat {
   /**
    * Widen the character panel so its tab row fits on one line (labels differ per language and UI scale); never
    * narrower than the standard width (PANEL_EM.character).
+   * @param {HTMLElement} panel
    */
   #fitSheetWidth(panel) {
     const nav = panel.querySelector(".avtt-tabs");
@@ -482,6 +524,7 @@ export default class Seat {
     this.#sheetWidth = Math.max(need, PANEL_EM.character * em);
     panel.style.width = `${this.#sheetWidth}px`;
   }
+
   #lastQuickTab = null;
 
   async renderInitiative() {
@@ -523,7 +566,10 @@ export default class Seat {
   /*  Chat                                        */
   /* -------------------------------------------- */
 
-  /** The "Mine" filter shows only messages spoken as this seat's character. */
+  /**
+   * The "Mine" filter shows only messages spoken as this seat's character.
+   * @returns {string|null}
+   */
   get #chatActorId() {
     return sheet.chatActorId(this.state.chatFilter, this.actor);
   }
@@ -569,12 +615,16 @@ export default class Seat {
     const input = this.element.querySelector('input[name="chatText"]');
     try {
       if ( await sheet.sendChat(input?.value, this.actor) ) input.value = "";
-    } catch(err) {
+    } catch ( err ) {
       ui.notifications.error(err.message);
     }
   });
 
-  /** Incremental update from chat hooks, so that open chat panels don't fully re-render on every roll. */
+  /**
+   * Incremental update from chat hooks, so that open chat panels don't fully re-render on every roll.
+   * @param {ChatMessage} message
+   * @param {"create"|"update"|"delete"} action
+   */
   async onChatMessage(message, action) {
     if ( this.state.panel !== "chat" ) return;
     const log = this.element.querySelector(".avtt-chat-log");
@@ -645,7 +695,12 @@ export default class Seat {
     return coreUI.runAction(target, BUSY_ACTIONS, () => this.#dispatch(target.dataset.action, target), `${MODULE_ID} | Seat action`);
   }
 
-  /** Run one action of this seat (buttons with data-action). */
+  /**
+   * Run one action of this seat (buttons with data-action).
+   * @param {string} action
+   * @param {HTMLElement} target
+   * @returns {Promise<unknown>}
+   */
   async #dispatch(action, target) {
     if ( CompendiumPanel.ACTIONS.has(action) ) return this.compendium.handle(action, target);
     if ( JournalPanel.ACTIONS.has(action) ) return this.journal.handle(action, target);
@@ -653,7 +708,9 @@ export default class Seat {
     // A check, save or skill (SotDL: an attribute) asks for advantage or boons first (per-browser setting), in a prompt
     // preset to the Next roll.
     if ( sheet.D20_ACTIONS.has(action) && getSetting("askBoons") && askSheetRoll(this.prompts, this.actor, action, target.dataset) ) return;
-    if ( sheet.D20_ACTIONS.has(action) ) return this.#d20(mode => sheet.runSheetAction(this.actor, action, target.dataset, mode));
+    if ( sheet.D20_ACTIONS.has(action) ) {
+      return this.#d20(mode => sheet.runSheetAction(this.actor, action, target.dataset, mode));
+    }
     if ( sheet.SHEET_ACTIONS.has(action) ) {
       return sheet.runSheetAction(this.actor, action, target.dataset, "normal", { toggled: this.state.toggledEffects });
     }
@@ -724,7 +781,10 @@ export default class Seat {
     sheet.onSheetChange(this.actor, name, value);
   }
 
-  /** Dragging a compendium entry: the drag data Foundry's sheets and the map expect. */
+  /**
+   * Dragging a compendium entry: the drag data Foundry's sheets and the map expect.
+   * @param {DragEvent} event
+   */
   #onDragStart(event) {
     const entry = event.target.closest?.('[data-action="compOpen"][data-uuid]');
     if ( !entry ) return;
@@ -757,20 +817,30 @@ export default class Seat {
     await Promise.all([this.renderPill(), this.renderPanel()]);
   }
 
-  /** Arm (or clear) advantage / disadvantage for the next d20 roll; shown as a chip on the player pill. */
+  /**
+   * Arm (or clear) advantage / disadvantage for the next d20 roll; shown as a chip on the player pill.
+   * @param {string} mode
+   * @returns {Promise<unknown[]>|undefined}
+   */
   #setAdvMode(mode) {
     if ( !advModes().includes(mode) ) return;
     this.state.advMode = mode;
     return Promise.all([this.renderPill(), (this.state.panel === "dice") ? this.renderDice() : null, this.renderPrompt()]);
   }
 
-  /** Run a d20 roll with the armed advantage choice, then reset it so it doesn't carry over to the next roll. */
+  /**
+   * Run a d20 roll with the armed advantage choice, then reset it so it doesn't carry over to the next roll.
+   * @param {(mode: string) => Promise<unknown>} roll
+   */
   async #d20(roll) {
     await roll(this.state.advMode);
     if ( this.state.advMode !== "normal" ) this.#setAdvMode("normal");
   }
 
-  /** Switch between damage, heal and temp HP without re-rendering, so a typed amount is kept. */
+  /**
+   * Switch between damage, heal and temp HP without re-rendering, so a typed amount is kept.
+   * @param {string} mode
+   */
   #setHpMode(mode) {
     if ( !sys.HP_MODES.includes(mode) ) return;
     this.state.hpMode = mode;

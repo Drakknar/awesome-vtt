@@ -55,12 +55,18 @@ export default class TableRollResolver extends RollResolver {
     return getSetting("physicalDice");
   }
 
-  /** Is an active GM asked to enter results? */
+  /**
+   * Is an active GM asked to enter results?
+   * @returns {boolean}
+   */
   get #relay() {
     return !game.user.isGM && ["gm", "both"].includes(this.#mode) && !!game.users.activeGM;
   }
 
-  /** May the rolling player enter results? Always, unless the GM is the one entering them. */
+  /**
+   * May the rolling player enter results? Always, unless the GM is the one entering them.
+   * @returns {boolean}
+   */
   get #playerEntry() {
     return game.user.isGM || this.#mode !== "gm" || !game.users.activeGM;
   }
@@ -182,7 +188,10 @@ export default class TableRollResolver extends RollResolver {
     return requestId;
   }
 
-  /** Tell the GM that these requests no longer need an answer. */
+  /**
+   * Tell the GM that these requests no longer need an answer.
+   * @param {string[]} requestIds
+   */
   #finish(requestIds) {
     const open = requestIds.filter(id => this.#requests.delete(id));
     if ( !open.length ) return;
@@ -190,19 +199,26 @@ export default class TableRollResolver extends RollResolver {
     emitSocket("diceDone", { requestIds: open });
   }
 
-  /** Name shown to the GM: the character of the seat that opened this roll, if known. */
+  /**
+   * Name shown to the GM: the character of the seat that opened this roll, if known.
+   * @returns {string}
+   */
   #speakerName() {
     const seat = game.modules.get(MODULE_ID).api?.overlay?.recentSeat;
     if ( seat?.actor ) return seat.config.playerName ? `${seat.actor.name} (${seat.config.playerName})` : seat.actor.name;
     return game.user.character?.name ?? game.user.name;
   }
 
-  /** Socket handler: results entered by the GM. */
+  /**
+   * Socket handler: results entered by the GM.
+   * @param {object} data
+   */
   static receiveResult(data) {
     if ( data.targetUserId !== game.user.id ) return;
     if ( !game.users.get(data.userId)?.isGM ) return;
     if ( !ID_PATTERN.test(data.requestId ?? "") ) return;
-    TableRollResolver.#byRequest.get(data.requestId)?.#applyResults(data.requestId, data.results, data.digital === true);
+    const resolver = TableRollResolver.#byRequest.get(data.requestId);
+    resolver?.#applyResults(data.requestId, data.results, data.digital === true);
   }
 
   #applyResults(requestId, results, digital) {
@@ -226,7 +242,10 @@ export default class TableRollResolver extends RollResolver {
     }
   }
 
-  /** The GM chose to let Foundry roll: empty dice get random results, as when the player confirms them empty. */
+  /**
+   * The GM chose to let Foundry roll: empty dice get random results, as when the player confirms them empty.
+   * @param {string[]} termIds
+   */
   #rollDigitally(termIds) {
     if ( !this.#submitted ) {
       this.element.requestSubmit(this.element.querySelector('button[type="submit"]'));

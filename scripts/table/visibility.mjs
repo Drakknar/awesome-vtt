@@ -23,7 +23,13 @@ export function refreshSeatedTokens() {
   canvas.perception.update({ initializeVision: true, refreshVision: true, refreshOcclusion: true });
 }
 
-/** Wrap a getter or method of the Token class, keeping core's own as the fallback. */
+/**
+ * Wrap a getter or method of the Token class, keeping core's own as the fallback.
+ * @param {Function} Token
+ * @param {string} name
+ * @param {"get"|"value"} kind
+ * @param {Function} fn
+ */
 function wrap(Token, name, kind, fn) {
   let proto = Token.prototype;
   let descriptor;

@@ -38,6 +38,7 @@ export default class GmDiceEntry extends HandlebarsApplicationMixin(ApplicationV
    * @param {string} request.formula
    * @param {string} request.flavor
    * @param {{termId: string, faces: number, count: number, extra: boolean}[]} request.slots
+   * @param {object} options
    */
   constructor(request, options = {}) {
     super({ ...options, id: `${MODULE_ID}-gm-dice-${request.requestId}` });
@@ -45,7 +46,10 @@ export default class GmDiceEntry extends HandlebarsApplicationMixin(ApplicationV
     GmDiceEntry.#open.set(request.requestId, this);
   }
 
-  /** Socket handler: the table no longer needs these results (entered there, or the roll finished). */
+  /**
+   * Socket handler: the table no longer needs these results (entered there, or the roll finished).
+   * @param {object} data
+   */
   static closeRequests(data) {
     if ( !Array.isArray(data.requestIds) ) return;
     for ( const id of data.requestIds.slice(0, 50) ) {

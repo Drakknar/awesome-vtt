@@ -35,6 +35,7 @@ export function activateDiceSocket() {
 /**
  * On the table client, make Physical dice the default method while the setting is on, and remove it when off
  * (per-die choices made in Configure Dice still win).
+ * @returns {Promise<void>|undefined}
  */
 export function syncTableDiceConfig() {
   if ( !isTableClient() ) return;
@@ -45,7 +46,10 @@ export function syncTableDiceConfig() {
 
 const text = (value, max) => (typeof value === "string" ? value.slice(0, max) : "");
 
-/** GM side: validate a request from a player client and open an entry window for it. */
+/**
+ * GM side: validate a request from a player client and open an entry window for it.
+ * @param {object} data
+ */
 function onDiceRequest(data) {
   if ( !game.user.isGM || !["gm", "both"].includes(getSetting("physicalDice")) ) return;
   const user = game.users.get(data.userId);

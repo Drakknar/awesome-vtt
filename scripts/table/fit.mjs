@@ -17,7 +17,11 @@ export function allocateEdge(pills, { start, end, gap = 0 }) {
   const needs = pills.map(p => Math.max(0, p.need));
   const order = pills.map((p, i) => i).sort((a, b) => pills[a].center - pills[b].center);
 
-  /** Do all pills fit when none is wider than `cap`? */
+  /**
+   * Do all pills fit when none is wider than `cap`?
+   * @param {number} cap
+   * @returns {boolean}
+   */
   const fits = cap => {
     const w = needs.map(n => Math.min(n, cap));
     for ( const i of order ) {

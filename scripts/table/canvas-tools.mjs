@@ -1,7 +1,7 @@
 /**
  * Map tools for the pills: Select, Hand (pan), Target, Ruler, zoom and reset zoom.
- * - Select, Target and Ruler are core's token tools ("select", "target", "ruler"), switched through the SceneControls application, so
- *   they work while the toolbar is hidden.
+ * - Select, Target and Ruler are core's token tools ("select", "target", "ruler"), switched through the
+ *   SceneControls application, so they work while the toolbar is hidden.
  * - Foundry v14 has no hand tool (core pans with right-drag or Ctrl + arrow keys), so Hand mode is this module's:
  *   while it's on, a left-drag on the map pans it, like core's right-drag, and doesn't select or move tokens.
  */
@@ -10,13 +10,20 @@ let handMode = false;
 let drag = null;
 const listeners = new Set();
 
-/** Called whenever the active map tool may have changed, so pills can update their buttons. */
+/**
+ * Called whenever the active map tool may have changed, so pills can update their buttons.
+ * @param {() => void} fn
+ * @returns {Set<Function>}
+ */
 export const onToolChange = fn => listeners.add(fn);
 const changed = () => listeners.forEach(fn => fn());
 
 const tokenTool = () => (ui.controls?.control?.name === "tokens") ? ui.controls?.tool?.name : null;
 
-/** @returns {"select"|"target"|"hand"|"ruler"|null} */
+/**
+ * The map tool the pill shows as active.
+ * @returns {"select"|"target"|"hand"|"ruler"|null}
+ */
 export function currentTool() {
   const tool = tokenTool();
   if ( (tool === "ruler") || (tool === "target") ) return tool;
@@ -24,7 +31,12 @@ export function currentTool() {
   return null;
 }
 
-/** Look up a token tool by key (with a fallback search), or null. */
+/**
+ * Look up a token tool by key (with a fallback search), or null.
+ * @param {string} key
+ * @param {RegExp} pattern
+ * @returns {string|null}
+ */
 function findTool(key, pattern) {
   const tools = ui.controls?.controls?.tokens?.tools ?? {};
   if ( key in tools ) return key;
@@ -51,7 +63,11 @@ export async function setTool(tool) {
   return currentTool();
 }
 
-/** The Ruler and Target buttons toggle between their tool and the Select tool. */
+/**
+ * The Ruler and Target buttons toggle between their tool and the Select tool.
+ * @param {string} tool
+ * @returns {unknown}
+ */
 export const toggleTool = tool => setTool((tokenTool() === tool) ? "select" : tool);
 
 /** Zoom factor per button press. */
@@ -60,6 +76,8 @@ const ZOOM_STEP = 1.25;
 /**
  * Zoom the map in (+1) or out (-1) around the current view centre.
  * Core clamps the result to the scene's zoom limits.
+ * @param {number} direction
+ * @returns {Promise<unknown>|undefined}
  */
 export function zoom(direction) {
   if ( !canvas?.ready ) return;
@@ -70,6 +88,7 @@ export function zoom(direction) {
 /**
  * Zoom back to 100% (one scene pixel per screen pixel) around the current view centre. Core has no reset-zoom
  * control of its own; this uses the same core call as the zoom buttons, which keeps it within the scene's limits.
+ * @returns {Promise<unknown>|undefined}
  */
 export function resetZoom() {
   if ( !canvas?.ready ) return;
@@ -88,6 +107,10 @@ const isBoard = target => target?.id === "board";
  * position the map itself saw (from before this drag, since the drag's events are kept from the map), and taking
  * that one as a move panned the map back and forth, and back to where it started (first seen on Firefox).
  * Panning is applied once per animation frame, with the latest pointer position.
+ */
+/**
+ * Hand mode: a left-button press on the board starts dragging the map, unless another tool took over.
+ * @param {PointerEvent} event
  */
 function onPointerDown(event) {
   if ( !handMode || (event.button !== 0) || !event.isTrusted || !isBoard(event.target) || !canvas?.ready ) return;
@@ -111,6 +134,10 @@ function onPointerDown(event) {
   document.body.classList.add("avtt-panning");
 }
 
+/**
+ * Hand mode: follow the pointer, panning at most once per animation frame.
+ * @param {PointerEvent} event
+ */
 function onPointerMove(event) {
   if ( !drag || !event.isTrusted || (event.pointerId !== drag.id) ) return;
   event.stopPropagation();
@@ -119,6 +146,9 @@ function onPointerMove(event) {
   drag.frame ??= requestAnimationFrame(applyDrag);
 }
 
+/**
+ * Pan the map to the drag's latest pointer position.
+ */
 function applyDrag() {
   if ( !drag ) return;
   drag.frame = null;
@@ -129,6 +159,10 @@ function applyDrag() {
   });
 }
 
+/**
+ * Hand mode: end the drag at the pointer's last position.
+ * @param {PointerEvent} event
+ */
 function onPointerUp(event) {
   if ( !drag || !event.isTrusted || (event.pointerId !== drag.id) ) return;
   event.stopPropagation();

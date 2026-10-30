@@ -13,12 +13,21 @@ const SEAT_KEYS = new Set(SEATS.map(s => s.key));
 
 const savedSeats = () => game.settings.get(MODULE_ID, "seats") ?? {};
 
-/** The seat key a character sits in, or null. */
+/**
+ * The seat key a character sits in, or null.
+ * @param {Actor|null} actor
+ * @param {object} seats
+ * @returns {string|null}
+ */
 export function seatOf(actor, seats = savedSeats()) {
   return Object.keys(seats).find(key => actor && (seats[key]?.actorId === actor.id)) ?? null;
 }
 
-/** Characters whose seat this user may choose: player characters they own. */
+/**
+ * Characters whose seat this user may choose: player characters they own.
+ * @param {User} user
+ * @returns {Actor[]}
+ */
 export const movableActors = (user = game.user) =>
   game.actors.filter(a => (a.type === "character") && a.testUserPermission(user, "OWNER"))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -46,6 +55,8 @@ export function seatOptions(actor) {
 
 /**
  * Move a character to a seat (swapping with whoever sits there). Sent to the active GM unless this user is one.
+ * @param {Actor|null} actor
+ * @param {string} seatKey
  * @returns {Promise<boolean>}  Whether the move was saved or sent.
  */
 export async function moveSeat(actor, seatKey) {
@@ -70,7 +81,13 @@ export function activateSeatSocket() {
   });
 }
 
-/** GM: check and save a move on behalf of a user. */
+/**
+ * GM: check and save a move on behalf of a user.
+ * @param {User} user
+ * @param {Actor} actor
+ * @param {string} seatKey
+ * @returns {Promise<boolean>}
+ */
 async function applyMove(user, actor, seatKey) {
   if ( !SEAT_KEYS.has(seatKey) || (actor.type !== "character") || !actor.testUserPermission(user, "OWNER") ) return false;
   const seats = foundry.utils.deepClone(savedSeats());

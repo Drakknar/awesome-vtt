@@ -9,7 +9,11 @@ export const MAX_DICE_PER_SLOT = 50;
 /** Ids produced by foundry.utils.randomID. */
 export const ID_PATTERN = /^[A-Za-z0-9]{16}$/;
 
-/** Broadcast a message to the other clients. The sender id is included so receivers can check who it came from. */
+/**
+ * Broadcast a message to the other clients. The sender id is included so receivers can check who it came from.
+ * @param {string} type
+ * @param {object} payload
+ */
 export function emitSocket(type, payload = {}) {
   game.socket.emit(CHANNEL, { ...payload, type, userId: game.user.id });
 }
