@@ -69,8 +69,9 @@ Hooks.once("ready", () => {
     return;
   }
   // SotDL: the GM's challenge cards are whispered to the players' own users only; the active GM's client relays them
-  // to the table user (nothing in dnd5e, or on other clients).
-  relayChallenges(() => [getSetting("tableUser")].filter(Boolean));
+  // to the table user, only for seated characters (seatOf reads the world seats setting and compares the original
+  // character, so a form counts too; nothing in dnd5e, or on other clients).
+  relayChallenges(actor => (seatOf(actor) ? [getSetting("tableUser")].filter(Boolean) : []));
   if ( !isTableClient() ) return;
 
   overlay = new TableOverlay();
