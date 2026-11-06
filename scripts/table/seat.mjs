@@ -650,8 +650,20 @@ export default class Seat {
     log.scrollTop = log.scrollHeight;
   }
 
-  /** New messages spoken as this seat's character since its chat panel was last open. */
-  #unread = 0;
+  /**
+   * Unread counts per seated character (original id), owned by the overlay so a rebuild of the seats (any seats or
+   * display setting change) keeps them; a seat built on its own has its own map.
+   * @type {Map<string, number>}
+   */
+  unreadCounts = new Map();
+
+  /**
+   * New messages spoken as this seat's character since its chat panel was last open.
+   * @returns {number}
+   */
+  get #unread() {
+    return this.unreadCounts.get(this.config.actorId) ?? 0;
+  }
 
   /**
    * Does a new message count as unread here: spoken as this seat's character (or a form of it), visible to the
@@ -670,7 +682,8 @@ export default class Seat {
    * @param {number} n
    */
   #setUnread(n) {
-    this.#unread = n;
+    if ( n ) this.unreadCounts.set(this.config.actorId, n);
+    else this.unreadCounts.delete(this.config.actorId);
     this.#applyUnread();
   }
 

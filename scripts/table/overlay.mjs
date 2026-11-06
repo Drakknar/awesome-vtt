@@ -12,6 +12,12 @@ export default class TableOverlay {
   /** @type {Map<string, Seat>} */
   seats = new Map();
 
+  /**
+   * Unread chat counts per seated character (original id), kept here so rebuild() doesn't reset them (see Seat).
+   * @type {Map<string, number>}
+   */
+  #unread = new Map();
+
   /** Last seat the mouse interacted with, used to adopt windows it opens. */
   #lastSeat = { key: null, time: 0 };
 
@@ -54,6 +60,7 @@ export default class TableOverlay {
     for ( const seat of SEATS ) {
       if ( !config[seat.key]?.actorId ) continue;
       const s = new Seat(seat, config[seat.key]);
+      s.unreadCounts = this.#unread;
       s.onPillRendered = () => this.#fitSoon();
       s.onPanelOpened = () => this.#onPanelOpened(s);
       s.freeSpan = () => this.freeSpan(s);
