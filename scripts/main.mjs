@@ -118,7 +118,11 @@ function registerTableHooks() {
   };
   Hooks.on("createActor", actor => sys.isTransformed(actor) && transformed());
   Hooks.on("deleteActor", actor => sys.isTransformed(actor) && transformed());
-  Hooks.on("updateActor", (actor, change) => foundry.utils.hasProperty(change, `flags.${game.system.id}`) && transformed());
+  // Only transform flag changes on a seated character or its forms (the system writes other flags often).
+  Hooks.on("updateActor", (actor, change) => {
+    const seated = [...overlay.seats.values()].map(s => s.config.actorId);
+    if ( sys.transformChanged(actor, change, seated) ) transformed();
+  });
 
   // Initiative and the your-turn indicator.
   for ( const hook of ["createCombat", "updateCombat", "deleteCombat",
