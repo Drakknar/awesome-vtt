@@ -67,6 +67,8 @@ The table also runs in **Shadow of the Demon Lord** worlds (system `demonlord` 6
 - **Pill:** health left (the system counts damage taken), Defense, Perception, Speed and Healing rate, and a star while the character has Fortune.
 - **Next roll:** boons or banes, from 3 banes to 3 boons (−3 … +3), instead of advantage, headed **Boons and banes** with **Banes** and **Boons** named under the two ends; it applies to the next challenge roll, attack, spell or talent from the seat, then resets.
 - **Attribute rolls** from the seat's sheet first ask in the seat how many boons or banes the roll gets (preset to the Next roll), then roll. Turn off **Ask for boons and banes** (per-browser setting, on by default, shown only in SotDL worlds) to roll straight away with the Next roll.
+- **Where boons and banes come from** (system 6.1.14 or later): attribute prompts and GM challenge requests list the roll's own boons and banes (effects, and for attacks the item, the target's defenses and a horrifying target; what the system hides from players shows as "Other"). Click one to leave it out of the roll, as in the system's own roll dialog. With **Ask for boons and banes** on, an attack that has such boons or banes asks first in the same way.
+- **Transformed characters** (system 6.1.13 or later, when the GM allows transformations; dnd5e's polymorph and wild shape too): the seat follows the character into its new form (pill, sheet, token on the map, My token), and back when it reverts. Quick actions show **Revert to original form** while transformed.
 - **Sheet:** Actions (weapons in hand, talents, spells, usable gear), Spells (by tradition and rank, with castings left), Abilities (the five attributes, rolled as challenges), Inventory (gc, ss, cp, bits; worn items), Status (afflictions) and Bio (read-only: ancestry, paths, professions, languages, religion, appearance, and the description with the background tables and the interesting thing). No Skills tab.
 - **Using things** rolls straight away with the Next roll, without the system's dialog: spells spend a casting, talents a use, weapons their ammunition (one attack per target), consumables one of their quantity. Afflictions that make an action fail stop it with the system's warning.
 - **Quick actions:** Fortune, action statuses (Defend, Concentrate, Prone, Help, Prepare), damage / healing, insanity and corruption − / +, effects, and Rest (8 hours or a full day, through the system's rest).
@@ -109,7 +111,7 @@ Choose who enters the results with the world setting **Physical dice**:
 
 Details:
 
-- **Keypad:** dice up to d20 get one button per face. d100 gets a tens/units pad (00 + 0 = 100). Other dice are typed.
+- **Keypad:** dice with up to 20 results get one button per face, from the die's lowest to its highest result (Foundry 14.370 and later know dice that don't start at 1, such as Fate dice, −1 to 1). d100 gets a tens/units pad (00 + 0 = 100). Other dice are typed, and the entry only accepts the die's own results.
 - **Rerolls and extra dice** (e.g. Halfling Luck, exploding dice) ask for one more die in the same window.
 - **Empty dice** are rolled by Foundry when you confirm, so you can mix real and digital dice (e.g. "Let Foundry roll instead").
 - **Table screen:** the module selects Physical dice as the default method on the table screen when the setting is on. It removes it when the setting is turned off. Per-die choices made in **Configure Dice** on that screen still take priority.

@@ -7,12 +7,24 @@ export const PAD_TEMPLATE = `modules/${MODULE_ID}/templates/dice-pad.hbs`;
 const MAX_FACE_BUTTONS = 20;
 
 /**
- * Keypad context for a die with the given number of faces, or null when the value must be typed.
- * @param {number} faces
+ * The results a die term can show: core's `minResult` / `maxResult` (Foundry 14.370; e.g. Fate dice −1 to 1, a coin
+ * 0 to 1, a die with a `minValue`), which core's resolver checks when it is closed. Older cores: 1 to its faces.
+ * @param {DiceTerm} term
+ * @returns {{min: number, max: number}}
+ */
+export function dieRange(term) {
+  const { minResult: min, maxResult: max } = term ?? {};
+  if ( Number.isInteger(min) && Number.isInteger(max) && (max > min) ) return { min, max };
+  return { min: 1, max: Number(term?.faces) || 0 };
+}
+
+/**
+ * Keypad context for a die's results (dieRange), or null when the value must be typed.
+ * @param {{min: number, max: number}} range
  * @returns {object|null}
  */
-export function padContext(faces) {
-  if ( faces === 100 ) {
+export function padContext({ min, max }) {
+  if ( (min === 1) && (max === 100) ) {
     const digits = [...Array(10).keys()];
     return {
       percentile: true,
@@ -20,20 +32,21 @@ export function padContext(faces) {
       units: digits
     };
   }
-  if ( faces <= MAX_FACE_BUTTONS ) return { faces: Array.from({ length: faces }, (_, i) => i + 1) };
+  const count = max - min + 1;
+  if ( (count > 1) && (count <= MAX_FACE_BUTTONS) ) return { faces: Array.from({ length: count }, (_, i) => min + i) };
   return null;
 }
 
 /**
- * Validate a result for a die: an integer between 1 and the number of faces, or null.
+ * Validate a result for a die: an integer within its results (dieRange), or null.
  * @param {unknown} value
- * @param {number} faces
+ * @param {{min: number, max: number}} range
  * @returns {number|null}
  */
-export function parseResult(value, faces) {
+export function parseResult(value, { min, max }) {
   if ( value === "" || value === null || value === undefined ) return null;
   const n = Number(value);
-  return Number.isInteger(n) && (n >= 1) && (n <= faces) ? n : null;
+  return Number.isInteger(n) && (n >= min) && (n <= max) ? n : null;
 }
 
 /**

@@ -25,6 +25,9 @@
   <div class="avtt-button-row">
     <button type="button" data-action="toggleInspiration" class="{{#if inspiration}}active{{/if}}"
             aria-pressed="{{#if inspiration}}true{{else}}false{{/if}}"><i class="fa-solid fa-star" inert></i> {{inspirationLabel}}</button>
+    {{#if revert}}
+    <button type="button" data-action="revertForm"><i class="fa-solid fa-person-rays" inert></i> {{localize "AVTTC.Transform.revert"}}</button>
+    {{/if}}
   </div>
 
   {{#if quickConditions.length}}

@@ -58,9 +58,13 @@ function onDiceRequest(data) {
   const slots = (Array.isArray(data.slots) ? data.slots : []).slice(0, MAX_SLOTS).flatMap(s => {
     const faces = Number(s?.faces);
     const count = Number(s?.count);
-    if ( !ID_PATTERN.test(s?.termId ?? "") || !Number.isInteger(faces) || !Number.isInteger(count) ) return [];
+    // The die's results (pad.mjs dieRange); a table client from before 14.370 support sends only the faces.
+    const min = Number(s?.min ?? 1);
+    const max = Number(s?.max ?? faces);
+    if ( !ID_PATTERN.test(s?.termId ?? "") || ![faces, count, min, max].every(Number.isInteger) ) return [];
     if ( (faces < 2) || (faces > 1000) || (count < 1) || (count > MAX_DICE_PER_SLOT) ) return [];
-    return [{ termId: s.termId, faces, count, extra: s.extra === true }];
+    if ( (Math.abs(min) > 1000) || (max - min < 1) || (max - min >= 1000) ) return [];
+    return [{ termId: s.termId, faces, min, max, count, extra: s.extra === true }];
   });
   if ( !slots.length ) return;
 

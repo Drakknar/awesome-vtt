@@ -95,7 +95,7 @@
       },
       "AskBoons": {
         "Name": "Ask for boons and banes",
-        "Hint": "Shadow of the Demon Lord: rolling an attribute from a seat's sheet first asks how many boons or banes the roll gets, preset to the seat's Next roll choice."
+        "Hint": "Shadow of the Demon Lord: rolling an attribute from a seat's sheet first asks how many boons or banes the roll gets, preset to the seat's Next roll choice. With the system's version 6.1.14 or later, it also lists where boons and banes come from (effects, the item, the target), so the player can switch off any that don't apply, and an attack with such boons or banes asks first too."
       },
       "AutoInitiative": {
         "Name": "Prompt for initiative",

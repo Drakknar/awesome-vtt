@@ -6,7 +6,7 @@ import TableSettingsConfig from "../apps/table-settings.mjs";
 import { CompendiumPanel, JournalPanel } from "../../../awesome-vtt-core/scripts/panels.mjs";
 import { DicePanel, advModes, advModeChoices, advModeScale, advModeShort, advModeTone } from "../../../awesome-vtt-core/scripts/dice.mjs";
 import * as sheet from "../../../awesome-vtt-core/scripts/sheet.mjs";
-import { PromptQueue, askSheetRoll } from "../../../awesome-vtt-core/scripts/prompts.mjs";
+import { PromptQueue, askSheetRoll, askItemRoll } from "../../../awesome-vtt-core/scripts/prompts.mjs";
 import * as coreUI from "../../../awesome-vtt-core/scripts/ui.mjs";
 import Keypad from "./keypad.mjs";
 
@@ -19,7 +19,7 @@ const tpl = name => `modules/${MODULE_ID}/templates/${name}.hbs`;
  */
 const BUSY_ACTIONS = new Set([
   "rollAbility", "rollSave", "rollSkill", "deathSave", "useItem", "applyHp", "spellPrepare", "invToParty", "toggleFavorite", "toggleInspiration", "toggleCondition",
-  "endConcentration", "exhaustion", "toggleEffect", "promptChoice", "chatSend",
+  "endConcentration", "exhaustion", "toggleEffect", "promptChoice", "chatSend", "revertForm",
   "shortRest", "longRest", "openFullSheet", "levelUp", "usesAdjust", "slotAdjust", "invQty", "invEquip", "invAttune", "invDetails",
   "diceRoll", "compSearch", "compBrowse", "compMore", "compOpen", "compOpenSheet", "compAddItem",
   "journalOpen", "journalShared", "journalPage", "journalFull", "rollInitiative", "turnSpeed", "endTurn", "focusToken", "trackAdjust"
@@ -135,8 +135,12 @@ export default class Seat {
     });
   }
 
+  /**
+   * The seated character, or its current form while it is transformed (the seat keeps the original's id).
+   * @returns {Actor|null}
+   */
   get actor() {
-    return game.actors.get(this.config.actorId);
+    return sys.currentForm(game.actors.get(this.config.actorId));
   }
 
   /* -------------------------------------------- */
@@ -739,6 +743,7 @@ export default class Seat {
       }
       case "promptChoice": return this.prompts.choose(target.dataset.index, roll => this.#d20(roll));
       case "promptLater": return this.prompts.dismiss();
+      case "promptSource": return this.prompts.toggleSource(target.dataset.sourceId);
       case "advMode": return this.#setAdvMode(target.dataset.mode);
 
       // Sheet
@@ -750,10 +755,12 @@ export default class Seat {
         s.quickTab = sheet.quickTab(target.dataset.tab);
         this.#saveState();
         return this.renderQuick();
-      // SotDL rolls straight away with the Next roll's boons or banes; dnd5e asks in its own windows.
+      // SotDL rolls straight away with the Next roll's boons or banes (with "Ask for boons and banes" on, an attack
+      // whose boons or banes come from somewhere asks first, listing them); dnd5e asks in its own windows.
       case "useItem":
-        if ( sys.FEATURES.itemRollMode ) return this.#d20(mode => sys.useItem(actor, target.dataset.itemId, mode));
-        return sys.useItem(actor, target.dataset.itemId);
+        if ( !sys.FEATURES.itemRollMode ) return sys.useItem(actor, target.dataset.itemId);
+        if ( getSetting("askBoons") && askItemRoll(this.prompts, actor, target.dataset.itemId) ) return;
+        return this.#d20(mode => sys.useItem(actor, target.dataset.itemId, mode));
       case "turnSpeed": return sys.setTurnSpeed(actor, target.dataset.fast === "true");
       case "hpMode": return this.#setHpMode(target.dataset.mode);
       case "applyHp": return this.#applyHp();

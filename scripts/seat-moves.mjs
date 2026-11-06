@@ -1,5 +1,6 @@
 import { MODULE_ID, SEATS, DEFAULT_COLORS } from "./constants.mjs";
 import { syncOwnership } from "./ownership.mjs";
+import sys from "../../awesome-vtt-core/scripts/system.mjs";
 
 /**
  * Players choose their character's seat (the "Table seat" options window, the phone's Settings tab; the table user
@@ -14,13 +15,21 @@ const SEAT_KEYS = new Set(SEATS.map(s => s.key));
 const savedSeats = () => game.settings.get(MODULE_ID, "seats") ?? {};
 
 /**
+ * The character itself for a transformed form (seats keep the original's id; the form is temporary).
+ * @param {Actor|null} actor
+ * @returns {Actor|null}
+ */
+const original = actor => (actor ? (game.actors.get(sys.originalId(actor)) ?? actor) : null);
+
+/**
  * The seat key a character sits in, or null.
  * @param {Actor|null} actor
  * @param {object} seats
  * @returns {string|null}
  */
 export function seatOf(actor, seats = savedSeats()) {
-  return Object.keys(seats).find(key => actor && (seats[key]?.actorId === actor.id)) ?? null;
+  const id = actor && sys.originalId(actor);
+  return Object.keys(seats).find(key => id && (seats[key]?.actorId === id)) ?? null;
 }
 
 /**
@@ -29,7 +38,7 @@ export function seatOf(actor, seats = savedSeats()) {
  * @returns {Actor[]}
  */
 export const movableActors = (user = game.user) =>
-  game.actors.filter(a => (a.type === "character") && a.testUserPermission(user, "OWNER"))
+  game.actors.filter(a => (a.type === "character") && !sys.isTransformed(a) && a.testUserPermission(user, "OWNER"))
     .sort((a, b) => a.name.localeCompare(b.name));
 
 /**
@@ -38,6 +47,7 @@ export const movableActors = (user = game.user) =>
  * @returns {{key: string, label: string, occupant: string, current: boolean, disabled: boolean}[]}
  */
 export function seatOptions(actor) {
+  actor = original(actor);
   const seats = savedSeats();
   const seated = !!seatOf(actor, seats);
   return SEATS.map(({ key }) => {
@@ -60,6 +70,7 @@ export function seatOptions(actor) {
  * @returns {Promise<boolean>}  Whether the move was saved or sent.
  */
 export async function moveSeat(actor, seatKey) {
+  actor = original(actor);
   if ( !actor || !SEAT_KEYS.has(seatKey) || !actor.isOwner ) return false;
   if ( game.user.isGM ) return applyMove(game.user, actor, seatKey);
   if ( !game.users.activeGM ) {
@@ -89,7 +100,8 @@ export function activateSeatSocket() {
  * @returns {Promise<boolean>}
  */
 async function applyMove(user, actor, seatKey) {
-  if ( !SEAT_KEYS.has(seatKey) || (actor.type !== "character") || !actor.testUserPermission(user, "OWNER") ) return false;
+  if ( !SEAT_KEYS.has(seatKey) || (actor.type !== "character") || sys.isTransformed(actor)
+    || !actor.testUserPermission(user, "OWNER") ) return false;
   const seats = foundry.utils.deepClone(savedSeats());
   const from = seatOf(actor, seats);
   if ( from === seatKey ) return true;
