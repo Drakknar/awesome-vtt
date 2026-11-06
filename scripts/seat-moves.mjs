@@ -38,7 +38,7 @@ export function seatOf(actor, seats = savedSeats()) {
  * @returns {Actor[]}
  */
 export const movableActors = (user = game.user) =>
-  game.actors.filter(a => (a.type === "character") && !sys.isTransformed(a) && a.testUserPermission(user, "OWNER"))
+  game.actors.filter(a => (a.type === "character") && !sys.isForm(a) && a.testUserPermission(user, "OWNER"))
     .sort((a, b) => a.name.localeCompare(b.name));
 
 /**
@@ -100,7 +100,7 @@ export function activateSeatSocket() {
  * @returns {Promise<boolean>}
  */
 async function applyMove(user, actor, seatKey) {
-  if ( !SEAT_KEYS.has(seatKey) || (actor.type !== "character") || sys.isTransformed(actor)
+  if ( !SEAT_KEYS.has(seatKey) || (actor.type !== "character") || sys.isForm(actor)
     || !actor.testUserPermission(user, "OWNER") ) return false;
   const seats = foundry.utils.deepClone(savedSeats());
   const from = seatOf(actor, seats);

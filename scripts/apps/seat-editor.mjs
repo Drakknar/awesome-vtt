@@ -27,8 +27,8 @@ export default class SeatEditor extends HandlebarsApplicationMixin(ApplicationV2
     const saved = game.settings.get(MODULE_ID, "seats") ?? {};
     const tableUser = game.settings.get(MODULE_ID, "tableUser");
     const actors = game.actors
-      // A transformed form is temporary: its character keeps the seat.
-      .filter(a => (a.type === "character") && !sys.isTransformed(a))
+      // A transformed form is temporary (or left behind by a player's revert): its character keeps the seat.
+      .filter(a => (a.type === "character") && !sys.isForm(a))
       .sort((a, b) => a.name.localeCompare(b.name))
       .map(a => ({ id: a.id, name: a.name }));
 
