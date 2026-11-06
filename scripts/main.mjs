@@ -86,9 +86,10 @@ Hooks.once("ready", () => {
   if ( game.system.id === "demonlord" ) installTurnedTippy();
   onToolChange(() => overlay.seats.forEach(s => s.refreshTools()));
   game.modules.get(MODULE_ID).api.overlay = overlay;
+  // Before the table hooks, which refresh it.
+  health = watchHealth(overlay);
   registerTableHooks();
   registerUseChecks(overlay);
-  health = watchHealth(overlay);
   // Phones without the map ask which creatures their character can see (target list); this screen draws its vision.
   answerVisibility();
   // Prompts go to the seat of the character they are for. SotDL challenge requests also come relayed by the GM, and
@@ -111,7 +112,7 @@ function registerTableHooks() {
   Hooks.on(`${MODULE_ID}.refresh`, () => {
     overlay.rebuild();
     refreshSeatedTokens();
-    health?.refresh();
+    health.refresh();
   });
 
   // Windows opened from a seat are rotated toward it; core UI is re-hidden when it re-renders.
@@ -128,7 +129,7 @@ function registerTableHooks() {
   const transformed = () => {
     overlay.renderAll();
     refreshSeatedTokens();
-    health?.refresh();
+    health.refresh();
   };
   Hooks.on("createActor", actor => sys.isTransformed(actor) && transformed());
   Hooks.on("deleteActor", actor => sys.isTransformed(actor) && transformed());

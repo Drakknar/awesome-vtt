@@ -52,8 +52,8 @@ export function announceChallenge(overlay, prompt, prompted) {
     passive: true,
     tint: playerColor(prompt.actor, overlay),
     name: prompt.actor.name,
-    text: game.i18n.format("AVTT.Notice.Challenge", { attribute: prompt.attribute ?? prompt.title }),
-    detail: prompt.boons ?? ""
+    text: game.i18n.format("AVTT.Notice.Challenge", { attribute: prompt.attribute }),
+    detail: prompt.boons
   };
   for ( const seat of overlay.seats.values() ) if ( !own.includes(seat) ) seat.showNotice(notice);
 }
@@ -112,7 +112,7 @@ export function watchHealth(overlay) {
     timers.set(actor.id, window.setTimeout(() => check(actor), HURT_WINDOW_MS));
   };
   for ( const hook of ["updateActor", "createActiveEffect", "updateActiveEffect", "deleteActiveEffect"] ) {
-    Hooks.on(hook, doc => changed(doc));
+    Hooks.on(hook, changed);
   }
   refresh();
   return { refresh };
