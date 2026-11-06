@@ -14,7 +14,12 @@ import sys from "../../../awesome-vtt-core/scripts/system.mjs";
 /** Actor ids of the seated characters; null while the table isn't set up on this client. */
 let seated = null;
 
-/** A transformed form's tokens count as its character's (the seat keeps the original's id). */
+/**
+ * Is this token a seated character's? A transformed form's tokens count as its character's (the seat keeps the
+ * original's id).
+ * @param {Token} token
+ * @returns {boolean}
+ */
 const isSeated = token => !!seated && !!token.actor && seated.has(sys.originalId(token.actor));
 
 /** Read the seats again (after they change) and refresh the map's vision. */

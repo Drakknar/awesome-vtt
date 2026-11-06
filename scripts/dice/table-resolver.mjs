@@ -121,7 +121,8 @@ export default class TableRollResolver extends RollResolver {
       }, { capture: true });
     }
     if ( hasGroup && (method === DICE_METHOD) && this.#relay ) {
-      const requestId = this.#request([{ termId: term._id, faces: term.faces, ...dieRange(term), count: 1, extra: true }]);
+      const slot = { termId: term._id, faces: term.faces, ...dieRange(term), count: 1, extra: true };
+      const requestId = this.#request([slot]);
       promise.then(() => this.#finish([requestId]));
     }
     return promise;
