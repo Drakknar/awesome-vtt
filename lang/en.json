@@ -91,7 +91,7 @@
       },
       "AutoRequests": {
         "Name": "Prompt for GM requests",
-        "Hint": "When the GM requests a group rest, save or check (D&D 5e) or a challenge roll (Shadow of the Demon Lord) from a seated character, ask in their seat."
+        "Hint": "When the GM requests a group rest, save or check (D&D 5e) or a challenge roll (Shadow of the Demon Lord) from a seated character, ask in their seat. Shadow of the Demon Lord's requests reach the table through the GM's client, so a GM must be logged in."
       },
       "AskBoons": {
         "Name": "Ask for boons and banes",
@@ -317,7 +317,9 @@
       "Miss": "Miss",
       "HitCount": "{hit} hit, {miss} missed",
       "Dismiss": "Click to dismiss.",
-      "RollDamage": "Roll damage"
+      "RollDamage": "Roll damage",
+      "Challenge": "{attribute} challenge roll",
+      "DamageTaken": "{n} damage taken"
     },
     "Quick": {
       "Title": "Quick actions",

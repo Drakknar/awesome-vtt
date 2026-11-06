@@ -30,6 +30,8 @@ const NOTICE_WARNING_MS = 8000;
 const NOTICE_RESULT_MS = 15000;
 /** A notice with a button (e.g. Roll damage) stays longer, so the player has time to use it. */
 const NOTICE_ACTION_MS = 30000;
+/** Notices about another character (table/notices.mjs) are brief. */
+const NOTICE_PASSIVE_MS = 6000;
 
 /**
  * Panels of a seat: quick actions (from the player pill) and the sections (section bar; "party" while the shared
@@ -917,22 +919,39 @@ export default class Seat {
    * A short notice just above the pill, facing this seat's player: a warning before an action (e.g. no target), or
    * the result of a damage or healing roll. Clicking it dismisses it; it also goes away by itself.
    * @param {object} notice
-   * @param {"warning"|"damage"|"healing"} notice.kind
+   * @param {"warning"|"damage"|"healing"|"roll"|"request"|"hurt"} notice.kind
    * @param {string} notice.text      Main line.
    * @param {string} [notice.detail]  Smaller second line.
    * @param {{label: string, run: Function}} [notice.action]  A button under the notice (e.g. Roll damage); using it
    *   closes the notice.
+   * @param {boolean} [notice.passive]  About another character, for everyone (table/notices.mjs, kinds "request" and
+   *   "hurt"): shown only when no other notice is up, and briefly.
+   * @param {string|null} [notice.tint]  "#rrggbb": the background of a passive notice (its player's colour).
    * Drawn by the core's fillNotice, with the classes avtt-notice-warning / avtt-notice-damage / avtt-notice-healing,
    * avtt-notice-text, avtt-notice-detail and avtt-notice-close; the button is drawn by the core's fillNoticeAction.
    */
   showNotice(notice) {
     const el = this.element.querySelector(".avtt-notice");
+    // A passive notice never covers this seat's own warning or result still on screen.
+    if ( notice.passive && !el.hidden && !this.#noticePassive ) return;
+    this.#noticePassive = !!notice.passive;
     coreUI.fillNotice(el, "avtt-notice", notice, game.i18n.localize("AVTT.Notice.Dismiss"));
     coreUI.fillNoticeAction(this.element.querySelector(".avtt-notice-action"), notice.action);
+    if ( notice.tint ) {
+      el.style.setProperty("--notice-tint", notice.tint);
+      el.style.setProperty("--notice-ink", coreUI.inkFor(notice.tint));
+    } else {
+      el.style.removeProperty("--notice-tint");
+      el.style.removeProperty("--notice-ink");
+    }
     window.clearTimeout(this.#noticeTimer);
-    const ms = notice.action ? NOTICE_ACTION_MS : (notice.kind === "warning") ? NOTICE_WARNING_MS : NOTICE_RESULT_MS;
+    const ms = notice.action ? NOTICE_ACTION_MS : notice.passive ? NOTICE_PASSIVE_MS
+      : (notice.kind === "warning") ? NOTICE_WARNING_MS : NOTICE_RESULT_MS;
     this.#noticeTimer = window.setTimeout(() => this.hideNotice(), ms);
   }
+
+  /** Is the notice on screen (or last shown) a passive one? */
+  #noticePassive = false;
 
   hideNotice() {
     window.clearTimeout(this.#noticeTimer);

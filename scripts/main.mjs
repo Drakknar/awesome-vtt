@@ -7,7 +7,7 @@ import { setKeepAwake } from "../../awesome-vtt-core/scripts/wake-lock.mjs";
 import { activateHandMode, onToolChange } from "./table/canvas-tools.mjs";
 import { registerUseChecks } from "./table/use-checks.mjs";
 import { closeStartupUserConfig, onActorDataChange, onChatChange, actorOf } from "../../awesome-vtt-core/scripts/ui.mjs";
-import { initPrompts } from "../../awesome-vtt-core/scripts/prompts.mjs";
+import { initPrompts, relayChallenges } from "../../awesome-vtt-core/scripts/prompts.mjs";
 import { answerVisibility } from "../../awesome-vtt-core/scripts/vision.mjs";
 import { registerCoreSettings } from "../../awesome-vtt-core/scripts/settings.mjs";
 import sys, { isSupported, markSystem } from "../../awesome-vtt-core/scripts/system.mjs";
@@ -15,6 +15,7 @@ import { installSeatedVisibility, refreshSeatedTokens } from "./table/visibility
 import { installSeatTooltips } from "./table/tooltips.mjs";
 import { installTurnedContextMenus, installTurnedPopups, installTurnedTippy } from "./table/turned.mjs";
 import { activateSeatSocket, movableActors, seatOf, seatOptions, moveSeat } from "./seat-moves.mjs";
+import { announceChallenge, watchHealth } from "./table/notices.mjs";
 
 /** Setting of each automation prompt kind (see the core's prompts.mjs); the same keys as on the phone. */
 const PROMPT_SETTINGS = {
@@ -24,6 +25,9 @@ const PROMPT_SETTINGS = {
 
 /** @type {TableOverlay|null} */
 let overlay = null;
+
+/** The seated characters' health, for the notices every seat sees (table/notices.mjs). */
+let health = null;
 
 Hooks.once("init", () => {
   markSystem();
@@ -64,6 +68,9 @@ Hooks.once("ready", () => {
     console.warn(`${MODULE_ID} | Only dnd5e and Shadow of the Demon Lord are supported; table mode disabled.`);
     return;
   }
+  // SotDL: the GM's challenge cards are whispered to the players' own users only; the active GM's client relays them
+  // to the table user (nothing in dnd5e, or on other clients).
+  relayChallenges(() => [getSetting("tableUser")].filter(Boolean));
   if ( !isTableClient() ) return;
 
   overlay = new TableOverlay();
@@ -80,14 +87,18 @@ Hooks.once("ready", () => {
   game.modules.get(MODULE_ID).api.overlay = overlay;
   registerTableHooks();
   registerUseChecks(overlay);
+  health = watchHealth(overlay);
   // Phones without the map ask which creatures their character can see (target list); this screen draws its vision.
   answerVisibility();
-  // Prompts go to the seat of the character they are for.
+  // Prompts go to the seat of the character they are for. SotDL challenge requests also come relayed by the GM, and
+  // the other seats get a notice about them.
   initPrompts({
     show: prompt => overlay.seatsFor(prompt.actor)[0]?.prompts.add(prompt),
     close: key => overlay.seats.forEach(s => s.prompts.close(key)),
     enabled: kind => getSetting(PROMPT_SETTINGS[kind]),
-    isMine: actor => overlay.seatsFor(actor).length > 0
+    isMine: actor => overlay.seatsFor(actor).length > 0,
+    announce: (prompt, prompted) => announceChallenge(overlay, prompt, prompted),
+    relayed: true
   });
 });
 
@@ -99,6 +110,7 @@ function registerTableHooks() {
   Hooks.on(`${MODULE_ID}.refresh`, () => {
     overlay.rebuild();
     refreshSeatedTokens();
+    health?.refresh();
   });
 
   // Windows opened from a seat are rotated toward it; core UI is re-hidden when it re-renders.
@@ -115,6 +127,7 @@ function registerTableHooks() {
   const transformed = () => {
     overlay.renderAll();
     refreshSeatedTokens();
+    health?.refresh();
   };
   Hooks.on("createActor", actor => sys.isTransformed(actor) && transformed());
   Hooks.on("deleteActor", actor => sys.isTransformed(actor) && transformed());

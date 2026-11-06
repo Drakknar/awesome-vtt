@@ -539,6 +539,13 @@ body:not([data-avtt-system="dnd5e"]) .avtt-chat-log .chat-message .message-heade
 .avtt-seat button.avtt-notice-healing { background: var(--avtt-hp); border-color: var(--avtt-hp); color: #111; }
 /* Any other roll: the colour of the seat's player. */
 .avtt-seat button.avtt-notice-roll { background: var(--seat-color); border-color: var(--seat-color); color: var(--seat-ink, #111); }
+/* About another character, for every seat (table/notices.mjs): the colour of that character's player, if known. */
+.avtt-seat button:is(.avtt-notice-request, .avtt-notice-hurt) {
+  background: var(--notice-tint, var(--avtt-bg-solid));
+  border-color: var(--notice-tint, var(--avtt-border));
+  color: var(--notice-ink, var(--avtt-text));
+}
+.avtt-seat button:is(.avtt-notice-request, .avtt-notice-hurt) .avtt-notice-text { font-size: 1.1em; }
 @keyframes avtt-notice-in { from { opacity: 0; transform: translateY(0.6em); } }
 /* The notice's button (Roll damage), between the notice and the pill. */
 .avtt-seat .avtt-notice-action {
