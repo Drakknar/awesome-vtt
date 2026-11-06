@@ -47,11 +47,18 @@ export function registerUseChecks(overlay) {
     usedBy = null;
     canvas.tokens?.setTargets([], { mode: "replace" });
   };
+  /**
+   * After an action that used the targets: remember whose it was.
+   * @param {Actor|null} actor
+   */
+  const markUsed = actor => {
+    if ( game.user.targets.size ) usedBy = sys.originalId(actor) ?? "";
+  };
   Hooks.on("targetToken", (user, token, targeted) => {
     if ( (user === game.user) && targeted ) usedBy = null;
   });
   Hooks.on("dnd5e.postUseActivity", activity => {
-    if ( sys.needsTargets(activity) && game.user.targets.size ) usedBy = sys.originalId(activity.actor) ?? "";
+    if ( sys.needsTargets(activity) ) markUsed(activity.actor);
   });
 
   Hooks.on("dnd5e.preUseActivity", (activity, usageConfig) => {
@@ -77,11 +84,19 @@ export function registerUseChecks(overlay) {
   });
 
   // SotDL: the same rule around the core's useItem (seat buttons, favorites, item prompts), for items that attack.
+  // Targets another character's action used are cleared; the same character keeps them. Without targets the use is
+  // cancelled (nothing spent) with a notice, as for dnd5e. Targets count as used only after a use that went ahead.
+  // With the system's "target on select" setting the system reads the selected tokens instead of the targets, so the
+  // whole rule is skipped (here and for the card buttons below).
   Hooks.on("awesome-vtt-core.preUseItem", (actor, item) => {
-    if ( getSetting("useChecks") && (usedBy !== null) && sys.itemNeedsTargets(item) ) clearUsed();
+    if ( !getSetting("useChecks") || sys.targetOnSelect() || !sys.itemNeedsTargets(item) ) return;
+    if ( (usedBy !== null) && (usedBy !== (sys.originalId(actor) ?? "")) ) clearUsed();
+    if ( game.user.targets.size ) return;
+    notify(actor, { kind: "warning", ...noTarget(item.name) });
+    return false;
   });
-  Hooks.on("awesome-vtt-core.useItem", (actor, item) => {
-    if ( sys.itemNeedsTargets(item) && game.user.targets.size ) usedBy = sys.originalId(actor) ?? "";
+  Hooks.on("awesome-vtt-core.useItem", (actor, item, used) => {
+    if ( used && !sys.targetOnSelect() && sys.itemNeedsTargets(item) ) markUsed(actor);
   });
   // SotDL card buttons that act on the targets (damage, healing, effects; the adapter's CARD_TARGET_BUTTONS), in a
   // seat's chat: targets another character's action used are cleared first, so a healing button pressed in one seat
@@ -89,7 +104,7 @@ export function registerUseChecks(overlay) {
   if ( sys.CARD_TARGET_BUTTONS ) overlay.element.addEventListener("click", event => {
     const button = event.target.closest?.(sys.CARD_TARGET_BUTTONS);
     const messageId = button?.closest("[data-message-id]")?.dataset.messageId;
-    if ( !messageId || !getSetting("useChecks") ) return;
+    if ( !messageId || !getSetting("useChecks") || sys.targetOnSelect() ) return;
     const message = game.messages.get(messageId);
     const actor = message ? messageActor(message) : null;
     const id = sys.originalId(actor) ?? "";
@@ -103,7 +118,7 @@ export function registerUseChecks(overlay) {
         detail: game.i18n.localize("AVTT.Checks.TargetsClearedHint")
       });
     }
-    else if ( game.user.targets.size ) usedBy = id;
+    else markUsed(actor);
   }, { capture: true });
 
   // Attack rolls from a seat's character are followed by their damage roll (the user's choice: always both).
@@ -142,10 +157,16 @@ export function registerUseChecks(overlay) {
  */
 function missingTargets(activity) {
   if ( !sys.needsTargets(activity) || game.user.targets.size ) return null;
-  return {
-    text: game.i18n.localize("AVTT.Checks.NoTarget"),
-    detail: game.i18n.format("AVTT.Checks.NoTargetHint", { name: activity.item.name })
-  };
+  return noTarget(activity.item.name);
+}
+
+/**
+ * The seat notice for an action used without targets.
+ * @param {string} name  The item's name.
+ * @returns {{text: string, detail: string}}
+ */
+function noTarget(name) {
+  return { text: game.i18n.localize("AVTT.Checks.NoTarget"), detail: game.i18n.format("AVTT.Checks.NoTargetHint", { name }) };
 }
 
 /**
