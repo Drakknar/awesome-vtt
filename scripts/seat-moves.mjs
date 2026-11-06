@@ -28,7 +28,7 @@ const original = actor => (actor ? (game.actors.get(sys.originalId(actor)) ?? ac
  * @returns {string|null}
  */
 export function seatOf(actor, seats = savedSeats()) {
-  const id = actor && sys.originalId(actor);
+  const id = sys.originalId(actor);
   return Object.keys(seats).find(key => id && (seats[key]?.actorId === id)) ?? null;
 }
 
