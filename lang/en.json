@@ -300,6 +300,8 @@
       "NoTargetHint": "{name}: press the Target button on your pill (hover over the pill to show it), then click the token. Click it again to untarget. Targets are cleared after each action.",
       "NoSlot": "No spell slots left",
       "NoSlotHint": "{name} needs a level {level} slot or higher.",
+      "TargetsCleared": "Targets cleared",
+      "TargetsClearedHint": "Those targets were used by another character's action. Target the tokens for this button, then press it again.",
       "NoUses": "No uses left",
       "NoUsesHint": "{name}: {value} left, needs {cost}."
     },

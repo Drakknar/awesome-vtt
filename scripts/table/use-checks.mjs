@@ -3,8 +3,9 @@ import sys, { damageAction } from "../../../awesome-vtt-core/scripts/system.mjs"
 import { messageActor } from "../../../awesome-vtt-core/scripts/common.mjs";
 
 /**
- * Hooks on the table screen, around using an item's activity (dnd5e 6.x; in other systems only the roll results
- * apply, since the dnd5e hooks never fire there and the adapters' follow-up rolls are no-ops):
+ * Hooks on the table screen, around using an item's activity (dnd5e 6.x; in SotDL the targets rule, around the
+ * core's useItem and the card buttons that act on targets, and the roll results apply, since the dnd5e hooks never
+ * fire there and the adapters' follow-up rolls are no-ops):
  * - Before use ("dnd5e.preUseActivity"): stop, with a notice in the character's seat, when something it needs is
  *   missing: targets, a spell slot, or uses (the item's or the activity's). dnd5e would otherwise open its dialog
  *   first, then fail with a notification in the middle of the screen, facing nobody in particular. Other resources
@@ -40,20 +41,22 @@ export function registerUseChecks(overlay) {
   // Targets belong to the one Table user, so all seats share them. Targets used by an action are cleared when the
   // next targeted action starts (not right after use, so its attack, damage and damage application still see them):
   // each action needs fresh targets, and one player's target is never reused by another without a warning.
-  let targetsUsed = false;
+  // `usedBy`: the character (original id) whose action used the current targets, or null when they are fresh.
+  let usedBy = null;
+  const clearUsed = () => {
+    usedBy = null;
+    canvas.tokens?.setTargets([], { mode: "replace" });
+  };
   Hooks.on("targetToken", (user, token, targeted) => {
-    if ( (user === game.user) && targeted ) targetsUsed = false;
+    if ( (user === game.user) && targeted ) usedBy = null;
   });
   Hooks.on("dnd5e.postUseActivity", activity => {
-    if ( sys.needsTargets(activity) && game.user.targets.size ) targetsUsed = true;
+    if ( sys.needsTargets(activity) && game.user.targets.size ) usedBy = sys.originalId(activity.actor) ?? "";
   });
 
   Hooks.on("dnd5e.preUseActivity", (activity, usageConfig) => {
     if ( !getSetting("useChecks") ) return;
-    if ( targetsUsed && sys.needsTargets(activity) ) {
-      targetsUsed = false;
-      canvas.tokens?.setTargets([], { mode: "replace" });
-    }
+    if ( (usedBy !== null) && sys.needsTargets(activity) ) clearUsed();
     const problem = missingTargets(activity) ?? describeProblem(sys.usageProblem(activity, usageConfig));
     if ( problem ) {
       notify(activity.actor, { kind: "warning", ...problem });
@@ -72,6 +75,36 @@ export function registerUseChecks(overlay) {
       activity.rollFormula({}, {}, { data: { system: { origin } } });
     }
   });
+
+  // SotDL: the same rule around the core's useItem (seat buttons, favorites, item prompts), for items that attack.
+  Hooks.on("awesome-vtt-core.preUseItem", (actor, item) => {
+    if ( getSetting("useChecks") && (usedBy !== null) && sys.itemNeedsTargets(item) ) clearUsed();
+  });
+  Hooks.on("awesome-vtt-core.useItem", (actor, item) => {
+    if ( sys.itemNeedsTargets(item) && game.user.targets.size ) usedBy = sys.originalId(actor) ?? "";
+  });
+  // SotDL card buttons that act on the targets (damage, healing, effects; the adapter's CARD_TARGET_BUTTONS), in a
+  // seat's chat: targets another character's action used are cleared first, so a healing button pressed in one seat
+  // doesn't heal what another seat attacked. The card's own character keeps them (its damage after its attack).
+  if ( sys.CARD_TARGET_BUTTONS ) overlay.element.addEventListener("click", event => {
+    const button = event.target.closest?.(sys.CARD_TARGET_BUTTONS);
+    const messageId = button?.closest("[data-message-id]")?.dataset.messageId;
+    if ( !messageId || !getSetting("useChecks") ) return;
+    const message = game.messages.get(messageId);
+    const actor = message ? messageActor(message) : null;
+    const id = sys.originalId(actor) ?? "";
+    if ( (usedBy !== null) && (usedBy !== id) ) {
+      const had = game.user.targets.size > 0;
+      clearUsed();
+      const seat = had ? overlay.seats.get(event.target.closest(".avtt-seat")?.dataset.seat) : null;
+      seat?.showNotice({
+        kind: "warning",
+        text: game.i18n.localize("AVTT.Checks.TargetsCleared"),
+        detail: game.i18n.localize("AVTT.Checks.TargetsClearedHint")
+      });
+    }
+    else if ( game.user.targets.size ) usedBy = id;
+  }, { capture: true });
 
   // Attack rolls from a seat's character are followed by their damage roll (the user's choice: always both).
   sys.rollDamageAfterAttacks(actor => getSetting("autoRoll") && (overlay.seatsFor(actor).length > 0));
