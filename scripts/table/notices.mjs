@@ -6,7 +6,8 @@ import { actorOf } from "../../../awesome-vtt-core/scripts/ui.mjs";
  * Notices every seat sees, about one seated character (the owner's choice, 2026-11-06: "certain notifications are
  * good to see for every player"): a challenge roll the GM asked of it, and it taking damage or becoming injured,
  * incapacitated or dead (dnd5e: unconscious or dead). They are passive: they never replace a seat's own warning or
- * roll result still on screen (see Seat#showNotice), and are tinted with the colour of that character's player.
+ * roll result still on screen but wait for it to go (see Seat#showNotice); those of one kind arriving while one is
+ * on screen become one notice (mergeNotices); each is tinted with the colour of its character's player.
  */
 
 /** Health changes of one character within this time (ms) make one notice (damage, then the statuses it brings). */
@@ -38,6 +39,22 @@ export function playerColor(actor, overlay) {
 }
 
 /**
+ * One notice for passive notices of one kind shown together (Seat#showNotice): "Ann, Bob" over their shared text, or
+ * each character's own text ("Ann: Injured · Bob: 3 damage taken") when they differ. The first one's tint (player
+ * colour) is kept: a notice has one background.
+ * @param {object[]} list  Notices of one kind, at least one, one per character.
+ * @returns {object}
+ */
+export function mergeNotices(list) {
+  const [first] = list;
+  if ( list.length === 1 ) return first;
+  const same = list.every(n => (n.text === first.text) && ((n.detail ?? "") === (first.detail ?? "")));
+  if ( same ) return { ...first, name: list.map(n => n.name).join(", ") };
+  const each = list.map(n => `${n.name}: ${n.text}${n.detail ? ` (${n.detail})` : ""}`);
+  return { ...first, name: "", text: each.join(" · "), detail: "" };
+}
+
+/**
  * Tell every seat about a challenge roll asked of a seated character (the core's initPrompts `announce`). The
  * character's own seat has the prompt; it gets the notice only when the prompt isn't shown ("Prompt for GM
  * requests" off).
@@ -50,6 +67,7 @@ export function announceChallenge(overlay, prompt, prompted) {
   const notice = {
     kind: "request",
     passive: true,
+    id: prompt.actor.id,
     tint: playerColor(prompt.actor, overlay),
     name: prompt.actor.name,
     text: game.i18n.format("AVTT.Notice.Challenge", { attribute: prompt.attribute }),
@@ -92,6 +110,7 @@ export function watchHealth(overlay) {
     const notice = {
       kind: "hurt",
       passive: true,
+      id: actor.id,
       tint: playerColor(actor, overlay),
       name: actor.name,
       text: added.length ? added.map(statusLabel).join(" · ") : taken,

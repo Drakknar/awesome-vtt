@@ -9,6 +9,7 @@ import * as sheet from "../../../awesome-vtt-core/scripts/sheet.mjs";
 import { PromptQueue, askSheetRoll, askItemRoll } from "../../../awesome-vtt-core/scripts/prompts.mjs";
 import * as coreUI from "../../../awesome-vtt-core/scripts/ui.mjs";
 import Keypad from "./keypad.mjs";
+import { mergeNotices } from "./notices.mjs";
 
 const { renderTemplate } = foundry.applications.handlebars;
 const tpl = name => `modules/${MODULE_ID}/templates/${name}.hbs`;
@@ -32,6 +33,8 @@ const NOTICE_RESULT_MS = 15000;
 const NOTICE_ACTION_MS = 30000;
 /** Notices about another character (table/notices.mjs) are brief. */
 const NOTICE_PASSIVE_MS = 6000;
+/** At most this many notices about other characters wait for a seat's notice to go (the oldest is dropped). */
+const MAX_QUEUED_NOTICES = 12;
 
 /**
  * Panels of a seat: quick actions (from the player pill) and the sections (section bar; "party" while the shared
@@ -925,16 +928,39 @@ export default class Seat {
    * @param {{label: string, run: Function}} [notice.action]  A button under the notice (e.g. Roll damage); using it
    *   closes the notice.
    * @param {boolean} [notice.passive]  About another character, for everyone (table/notices.mjs, kinds "request" and
-   *   "hurt"): shown only when no other notice is up, and briefly.
+   *   "hurt"), shown briefly. While a notice is on screen, a passive one of the same kind is merged into it (one
+   *   notice listing the characters, see mergeNotices; the same character's newer one replaces its older one), and
+   *   any other passive one waits in a queue and shows when the notice goes. A seat's own notice always shows at once.
+   * @param {string} [notice.id]  Passive: the character it is about (merging).
    * @param {string|null} [notice.tint]  "#rrggbb": the background of a passive notice (its player's colour).
    * Drawn by the core's fillNotice, with the classes avtt-notice-warning / avtt-notice-damage / avtt-notice-healing,
    * avtt-notice-text, avtt-notice-detail and avtt-notice-close; the button is drawn by the core's fillNoticeAction.
    */
   showNotice(notice) {
     const el = this.element.querySelector(".avtt-notice");
-    // A passive notice never covers this seat's own warning or result still on screen.
-    if ( notice.passive && !el.hidden && !this.#noticePassive ) return;
-    this.#noticePassive = !!notice.passive;
+    if ( notice.passive && !el.hidden ) {
+      const shown = this.#passiveShown;
+      if ( shown?.[0].kind !== notice.kind ) {
+        if ( this.#noticeQueue.length >= MAX_QUEUED_NOTICES ) this.#noticeQueue.shift();
+        this.#noticeQueue.push(notice);
+        return;
+      }
+      const i = shown.findIndex(n => n.id === notice.id);
+      if ( i >= 0 ) shown[i] = notice;
+      else shown.push(notice);
+      this.#drawNotice(mergeNotices(shown));
+      return;
+    }
+    this.#passiveShown = notice.passive ? [notice] : null;
+    this.#drawNotice(notice);
+  }
+
+  /**
+   * Draw a notice and start its timer.
+   * @param {object} notice  See showNotice.
+   */
+  #drawNotice(notice) {
+    const el = this.element.querySelector(".avtt-notice");
     coreUI.fillNotice(el, "avtt-notice", notice, game.i18n.localize("AVTT.Notice.Dismiss"));
     coreUI.fillNoticeAction(this.element.querySelector(".avtt-notice-action"), notice.action);
     if ( notice.tint ) {
@@ -950,12 +976,20 @@ export default class Seat {
     this.#noticeTimer = window.setTimeout(() => this.hideNotice(), ms);
   }
 
-  /** Is the notice on screen (or last shown) a passive one? */
-  #noticePassive = false;
+  /** The passive notices merged into the one on screen, or null when it is the seat's own (or none was shown). */
+  #passiveShown = null;
+
+  /** Passive notices waiting for the one on screen to go. */
+  #noticeQueue = [];
 
   hideNotice() {
     window.clearTimeout(this.#noticeTimer);
     for ( const el of this.element.querySelectorAll(".avtt-notice, .avtt-notice-action") ) el.hidden = true;
+    this.#passiveShown = null;
+    // Then the waiting passive notices: the first shows, the others of its kind merge into it, the rest wait again.
+    const queued = this.#noticeQueue;
+    this.#noticeQueue = [];
+    queued.forEach(n => this.showNotice(n));
   }
 
   /** Mark the active map tool on this seat's pill without re-rendering it. */
