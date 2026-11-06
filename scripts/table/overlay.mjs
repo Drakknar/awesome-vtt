@@ -3,6 +3,7 @@ import { getSetting } from "../settings.mjs";
 import Seat from "./seat.mjs";
 import { allocateEdge } from "./fit.mjs";
 import { inkFor } from "../../../awesome-vtt-core/scripts/ui.mjs";
+import sys from "../../../awesome-vtt-core/scripts/system.mjs";
 
 /**
  * Owns the full-screen overlay on the table client, its seats, and the rotation of windows opened from a seat.
@@ -160,12 +161,13 @@ export default class TableOverlay {
   }
 
   /**
-   * Seats showing a given actor.
+   * Seats showing a given actor (or the character a transformed form came from).
    * @param {Actor|null} actor
    * @returns {import("./seat.mjs").default[]}
    */
   seatsFor(actor) {
-    return [...this.seats.values()].filter(s => s.config.actorId === actor?.id);
+    const id = sys.originalId(actor);
+    return [...this.seats.values()].filter(s => id && (s.config.actorId === id));
   }
 
   renderActor(actor) {

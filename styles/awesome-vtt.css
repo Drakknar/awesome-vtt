@@ -489,6 +489,11 @@ body:not([data-avtt-system="dnd5e"]) .avtt-chat-log .chat-message .message-heade
 }
 .avtt-prompt p { margin: 0; }
 .avtt-prompt-choices { display: flex; flex-direction: column; gap: 0.3em; }
+/* SotDL 6.1.14: where the roll's boons and banes come from; a switched-off one is dimmed. */
+.avtt-boon-sources { display: flex; flex-direction: column; gap: 0.2em; margin: 0; padding: 0.3em 0.5em; border-radius: var(--avtt-radius); }
+.avtt-boon-sources legend { font-size: 0.85em; }
+.avtt-seat .avtt-boon-sources button { justify-content: flex-start; text-align: start; height: auto; min-height: var(--button-size); white-space: normal; }
+.avtt-seat .avtt-boon-sources button:not(.selected) { opacity: 0.55; text-decoration: line-through; }
 .avtt-death-tally { display: flex; gap: 1em; }
 .avtt-death-tally .success i { color: var(--avtt-adv); }
 .avtt-death-tally .failure i { color: var(--avtt-dis); }

@@ -10,7 +10,7 @@ import { closeStartupUserConfig, onActorDataChange, onChatChange, actorOf } from
 import { initPrompts } from "../../awesome-vtt-core/scripts/prompts.mjs";
 import { answerVisibility } from "../../awesome-vtt-core/scripts/vision.mjs";
 import { registerCoreSettings } from "../../awesome-vtt-core/scripts/settings.mjs";
-import { isSupported, markSystem } from "../../awesome-vtt-core/scripts/system.mjs";
+import sys, { isSupported, markSystem } from "../../awesome-vtt-core/scripts/system.mjs";
 import { installSeatedVisibility, refreshSeatedTokens } from "./table/visibility.mjs";
 import { installSeatTooltips } from "./table/tooltips.mjs";
 import { installTurnedContextMenus, installTurnedPopups, installTurnedTippy } from "./table/turned.mjs";
@@ -108,6 +108,20 @@ function registerTableHooks() {
   onActorDataChange(doc => {
     const actor = actorOf(doc);
     if ( actor instanceof Actor ) overlay.renderActor(actor);
+  });
+
+  // A seated character transformed or reverted (a form actor created, deleted, or its flags removed): its seat shows
+  // the new form, and the form's tokens count as seated.
+  const transformed = () => {
+    overlay.renderAll();
+    refreshSeatedTokens();
+  };
+  Hooks.on("createActor", actor => sys.isTransformed(actor) && transformed());
+  Hooks.on("deleteActor", actor => sys.isTransformed(actor) && transformed());
+  // Only transform flag changes on a seated character or its forms (the system writes other flags often).
+  Hooks.on("updateActor", (actor, change) => {
+    const seated = [...overlay.seats.values()].map(s => s.config.actorId);
+    if ( sys.transformChanged(actor, change, seated) ) transformed();
   });
 
   // Initiative and the your-turn indicator.

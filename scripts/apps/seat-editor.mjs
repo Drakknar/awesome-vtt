@@ -1,5 +1,6 @@
 import { MODULE_ID, SEATS, DEFAULT_COLORS } from "../constants.mjs";
 import { syncOwnership } from "../ownership.mjs";
+import sys from "../../../awesome-vtt-core/scripts/system.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -26,7 +27,8 @@ export default class SeatEditor extends HandlebarsApplicationMixin(ApplicationV2
     const saved = game.settings.get(MODULE_ID, "seats") ?? {};
     const tableUser = game.settings.get(MODULE_ID, "tableUser");
     const actors = game.actors
-      .filter(a => a.type === "character")
+      // A transformed form is temporary (or left behind by a player's revert): its character keeps the seat.
+      .filter(a => (a.type === "character") && !sys.isForm(a))
       .sort((a, b) => a.name.localeCompare(b.name))
       .map(a => ({ id: a.id, name: a.name }));
 

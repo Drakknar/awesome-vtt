@@ -37,7 +37,7 @@ export default class GmDiceEntry extends HandlebarsApplicationMixin(ApplicationV
    * @param {string} request.speaker
    * @param {string} request.formula
    * @param {string} request.flavor
-   * @param {{termId: string, faces: number, count: number, extra: boolean}[]} request.slots
+   * @param {{termId: string, faces: number, min: number, max: number, count: number, extra: boolean}[]} request.slots
    * @param {object} options
    */
   constructor(request, options = {}) {
@@ -70,7 +70,7 @@ export default class GmDiceEntry extends HandlebarsApplicationMixin(ApplicationV
         ...s,
         label: `${s.count}d${s.faces}`,
         inputs: Array.from({ length: s.count }),
-        pad: padContext(s.faces)
+        pad: padContext(s)
       }))
     };
   }
@@ -105,7 +105,7 @@ export default class GmDiceEntry extends HandlebarsApplicationMixin(ApplicationV
     const results = {};
     for ( const slot of this.request.slots ) {
       const fieldset = form.querySelector(`fieldset[data-term-id="${CSS.escape(slot.termId)}"]`);
-      const values = [...(fieldset?.querySelectorAll("input") ?? [])].map(i => parseResult(i.value, slot.faces));
+      const values = [...(fieldset?.querySelectorAll("input") ?? [])].map(i => parseResult(i.value, slot));
       if ( (values.length !== slot.count) || values.includes(null) ) {
         ui.notifications.warn("AVTT.Dice.Incomplete", { localize: true });
         return;

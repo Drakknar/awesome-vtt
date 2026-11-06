@@ -2,7 +2,7 @@ import { MODULE_ID } from "../constants.mjs";
 import { PHYSICAL_DICE_METHOD as DICE_METHOD } from "../../../awesome-vtt-core/scripts/dice.mjs";
 import { getSetting } from "../settings.mjs";
 import { emitSocket, ID_PATTERN, MAX_SLOTS, MAX_DICE_PER_SLOT } from "./socket.mjs";
-import { padContext, parseResult, fillSlot, clearSlots, onPadClick } from "./pad.mjs";
+import { dieRange, padContext, parseResult, fillSlot, clearSlots, onPadClick } from "./pad.mjs";
 
 const RollResolver = foundry.applications.dice.RollResolver;
 
@@ -83,7 +83,7 @@ export default class TableRollResolver extends RollResolver {
       if ( method !== DICE_METHOD ) continue;
       physical = true;
       for ( const result of group.results ) result.readonly = !entry;
-      if ( entry ) group.pad = padContext(term.faces);
+      if ( entry ) group.pad = padContext(dieRange(term));
     }
     return Object.assign(context, {
       waitingForGM: physical && this.#relay && !entry,
@@ -100,7 +100,7 @@ export default class TableRollResolver extends RollResolver {
       if ( (method !== DICE_METHOD) || this.#requestedTerms.has(id) ) continue;
       this.#requestedTerms.add(id);
       const count = Math.max(0, (term.number ?? 1) - term.results.length);
-      if ( count ) slots.push({ termId: id, faces: term.faces, count });
+      if ( count ) slots.push({ termId: id, faces: term.faces, ...dieRange(term), count });
     }
     if ( slots.length ) this.#request(slots);
   }
@@ -121,7 +121,8 @@ export default class TableRollResolver extends RollResolver {
       }, { capture: true });
     }
     if ( hasGroup && (method === DICE_METHOD) && this.#relay ) {
-      const requestId = this.#request([{ termId: term._id, faces: term.faces, count: 1, extra: true }]);
+      const slot = { termId: term._id, faces: term.faces, ...dieRange(term), count: 1, extra: true };
+      const requestId = this.#request([slot]);
       promise.then(() => this.#finish([requestId]));
     }
     return promise;
@@ -231,7 +232,7 @@ export default class TableRollResolver extends RollResolver {
       const term = this.fulfillable.get(termId)?.term;
       if ( !term || !Array.isArray(values) ) continue;
       for ( const value of values.slice(0, MAX_DICE_PER_SLOT) ) {
-        const n = parseResult(value, term.faces);
+        const n = parseResult(value, dieRange(term));
         if ( n !== null ) fillSlot(this.element, termId, n);
       }
     }
