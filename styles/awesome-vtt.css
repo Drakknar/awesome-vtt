@@ -191,6 +191,17 @@ body.avtt-hide-ui #chat-notifications { display: none !important; }
 /* The label stretches across the button instead of using a percentage max-width: a percentage made the natural
    width measured by the pill fitting grow with the button's current width (see Seat#measurePillNeed). */
 .avtt-pill-sections button span { display: block; align-self: stretch; min-width: 0; text-align: center; font-size: 0.75em; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; }
+/* New messages spoken as the seat's character since its chat was last open (Seat#applyUnread). */
+.avtt-pill-sections button[data-unread] { position: relative; }
+.avtt-pill-sections button[data-unread]::after {
+  content: attr(data-unread);
+  position: absolute; top: 0.15em; right: 0.25em;
+  min-width: 1.4em; padding: 0 0.3em;
+  border-radius: 999px;
+  background: var(--avtt-hp-low); color: #fff;
+  font-size: 0.7em; font-weight: bold; line-height: 1.4em; text-align: center;
+  pointer-events: none;
+}
 /* Only when an edge can't fit its pills at full width (see TableOverlay#fitPills) do the labels give way to icons. */
 .avtt-pill-sections.compact button span { display: none; }
 /* Player pill: quick actions and the armed advantage chip, at its right; Level up in the character panel's header. */

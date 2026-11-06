@@ -264,6 +264,7 @@ export default class Seat {
     // Fold the map tools and sections away until the pointer comes near (see the CSS).
     this.element.classList.toggle("avtt-fold", getSetting("foldPill"));
     this.#applyCompact();
+    this.#applyUnread();
     this.onPillRendered?.();
   }
 
@@ -579,6 +580,8 @@ export default class Seat {
   }
 
   async renderChat() {
+    // The player is reading the chat: nothing is unread any more.
+    this.#setUnread(0);
     const log = this.element.querySelector(".avtt-chat-log");
     const { messages } = sheet.chatMessages({ actorId: this.#chatActorId, limit: getSetting("chatHistory") });
     const items = await Promise.all(messages.map(m => coreUI.renderMessage(m)));
@@ -630,13 +633,54 @@ export default class Seat {
    * @param {"create"|"update"|"delete"} action
    */
   async onChatMessage(message, action) {
-    if ( this.state.panel !== "chat" ) return;
+    if ( this.state.panel !== "chat" ) {
+      if ( (action === "create") && this.#isUnread(message) ) this.#setUnread(this.#unread + 1);
+      return;
+    }
     const log = this.element.querySelector(".avtt-chat-log");
     const result = await coreUI.syncMessage(log, message, action, sheet.chatShows(message, this.#chatActorId));
     if ( result !== "added" ) return;
     const limit = getSetting("chatHistory");
     while ( log.children.length > limit ) log.firstElementChild.remove();
     log.scrollTop = log.scrollHeight;
+  }
+
+  /** New messages spoken as this seat's character since its chat panel was last open. */
+  #unread = 0;
+
+  /**
+   * Does a new message count as unread here: spoken as this seat's character (or a form of it), visible to the
+   * table, and not sent from this screen (the seat saw its own rolls happen)?
+   * @param {ChatMessage} message
+   * @returns {boolean}
+   */
+  #isUnread(message) {
+    if ( !message.visible || message.isAuthor ) return false;
+    const speaker = game.actors.get(message.speaker?.actor);
+    return !!speaker && (sys.originalId(speaker) === this.config.actorId);
+  }
+
+  /**
+   * Set the unread count and show it on the Chat section button.
+   * @param {number} n
+   */
+  #setUnread(n) {
+    this.#unread = n;
+    this.#applyUnread();
+  }
+
+  /** Draw the unread count on the Chat section button (`data-unread`, a badge in the CSS), also after a re-render. */
+  #applyUnread() {
+    const button = this.element.querySelector('.avtt-pill-sections [data-panel="chat"]');
+    if ( !button ) return;
+    const label = game.i18n.localize("AVTT.Sections.chat");
+    if ( this.#unread ) {
+      button.dataset.unread = (this.#unread > 99) ? "99+" : String(this.#unread);
+      button.setAttribute("aria-label", game.i18n.format("AVTT.Pill.ChatUnread", { label, n: this.#unread }));
+    } else {
+      delete button.dataset.unread;
+      button.setAttribute("aria-label", label);
+    }
   }
 
   /* -------------------------------------------- */

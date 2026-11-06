@@ -161,6 +161,7 @@
       "Target": "Target",
       "Quick": "Quick actions",
       "Sections": "Sections",
+      "ChatUnread": "{label}, {n} new",
       "AdvShort": {
         "adv": "ADV",
         "dis": "DIS"
