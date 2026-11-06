@@ -202,6 +202,20 @@ body.avtt-hide-ui #chat-notifications { display: none !important; }
   font-size: 0.7em; font-weight: bold; line-height: 1.4em; text-align: center;
   pointer-events: none;
 }
+/* The same count on the folded player pill, so it shows without unfolding (alerts are always visible, owner's
+   decision 2026-11-06); a folded pill with unread messages doesn't fade. Hidden when the pill isn't folded (the Chat button
+   shows it). */
+.avtt-fold .avtt-pill.avtt-has-unread { opacity: 1; }
+.avtt-pill-unread {
+  position: absolute; top: -0.6em; right: 1.2em;
+  min-width: 1.6em; padding: 0 0.35em; box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--avtt-hp-low); color: #fff;
+  font-size: 0.8em; font-weight: bold; line-height: 1.6em; text-align: center;
+  box-shadow: 0 0 0 2px var(--seat-color);
+  pointer-events: none;
+}
+.avtt-seat:not(.avtt-fold) .avtt-pill-unread { display: none; }
 /* Only when an edge can't fit its pills at full width (see TableOverlay#fitPills) do the labels give way to icons. */
 .avtt-pill-sections.compact button span { display: none; }
 /* Player pill: quick actions and the armed advantage chip, at its right; Level up in the character panel's header. */

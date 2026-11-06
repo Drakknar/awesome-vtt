@@ -687,18 +687,39 @@ export default class Seat {
     this.#applyUnread();
   }
 
-  /** Draw the unread count on the Chat section button (`data-unread`, a badge in the CSS), also after a re-render. */
+  /**
+   * Draw the unread count (also after a re-render): on the Chat section button (`data-unread`, a badge in the CSS),
+   * and on the player pill itself, which stays visible while the pill is folded (`.avtt-pill-unread`, shown by the
+   * CSS only on a folded pill; the pill is then fully opaque, `.avtt-has-unread`, so the alert isn't faded).
+   */
   #applyUnread() {
-    const button = this.element.querySelector('.avtt-pill-sections [data-panel="chat"]');
-    if ( !button ) return;
+    const n = this.#unread;
+    const text = (n > 99) ? "99+" : String(n);
     const label = game.i18n.localize("AVTT.Sections.chat");
-    if ( this.#unread ) {
-      button.dataset.unread = (this.#unread > 99) ? "99+" : String(this.#unread);
-      button.setAttribute("aria-label", game.i18n.format("AVTT.Pill.ChatUnread", { label, n: this.#unread }));
-    } else {
-      delete button.dataset.unread;
-      button.setAttribute("aria-label", label);
+    const aria = n ? game.i18n.format("AVTT.Pill.ChatUnread", { label, n }) : label;
+    const button = this.element.querySelector('.avtt-pill-sections [data-panel="chat"]');
+    if ( button ) {
+      if ( n ) button.dataset.unread = text;
+      else delete button.dataset.unread;
+      button.setAttribute("aria-label", aria);
     }
+    const pill = this.element.querySelector(".avtt-pill");
+    if ( !pill ) return;
+    pill.classList.toggle("avtt-has-unread", n > 0);
+    let badge = pill.querySelector(":scope > .avtt-pill-unread");
+    if ( !n ) {
+      badge?.remove();
+      return;
+    }
+    if ( !badge ) {
+      badge = document.createElement("span");
+      badge.className = "avtt-pill-unread";
+      badge.setAttribute("role", "status");
+      pill.append(badge);
+    }
+    badge.textContent = text;
+    badge.setAttribute("aria-label", aria);
+    badge.title = aria;
   }
 
   /* -------------------------------------------- */
