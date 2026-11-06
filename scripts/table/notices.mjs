@@ -65,7 +65,7 @@ export function announceChallenge(overlay, prompt, prompted) {
  * @returns {{refresh: function(): void}}  Call refresh after the seats or a seated character's form changed.
  */
 export function watchHealth(overlay) {
-  /** Last state seen per actor id: { damage, statuses }. */
+  /** Last state seen per actor id: the core's healthState ({ damage, statuses }; dnd5e also effectiveMax). */
   const last = new Map();
   const timers = new Map();
 
@@ -83,7 +83,9 @@ export function watchHealth(overlay) {
     const now = sys.healthState(actor);
     last.set(actor.id, now);
     if ( !before ) return;
-    const damage = now.damage - before.damage;
+    // In dnd5e, HP drop with the maximum (e.g. temporary max HP ending): only damage beyond that drop counts.
+    const maxDrop = Math.max(0, (before.effectiveMax ?? 0) - (now.effectiveMax ?? 0));
+    const damage = Math.max(0, now.damage - before.damage - maxDrop);
     const added = now.statuses.filter(id => !before.statuses.includes(id));
     if ( (damage <= 0) && !added.length ) return;
     const taken = (damage > 0) ? game.i18n.format("AVTT.Notice.DamageTaken", { n: damage }) : "";
