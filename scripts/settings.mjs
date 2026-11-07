@@ -182,15 +182,17 @@ export function registerSettings() {
     type: new BooleanField({ initial: false })
   });
 
-  // Automation prompts in the seats (see the core's prompts.mjs), each off by default, as on the phone.
-  for ( const [key, name] of [["autoDeathSaves", "AutoDeathSaves"], ["autoConcentration", "AutoConcentration"],
-    ["autoSaves", "AutoSaves"], ["autoRequests", "AutoRequests"], ["autoInitiative", "AutoInitiative"]] ) {
+  // Automation prompts in the seats (see the core's prompts.mjs), off by default as on the phone, except GM requests
+  // (on since 0.16.0, owner's decision: the table has no other way to see a SotDL challenge request).
+  for ( const [key, name, initial] of [["autoDeathSaves", "AutoDeathSaves", false],
+    ["autoConcentration", "AutoConcentration", false], ["autoSaves", "AutoSaves", false],
+    ["autoRequests", "AutoRequests", true], ["autoInitiative", "AutoInitiative", false]] ) {
     game.settings.register(MODULE_ID, key, {
       name: `AVTT.Settings.${name}.Name`,
       hint: `AVTT.Settings.${name}.Hint`,
       scope: "client",
       config: true,
-      type: new BooleanField({ initial: false })
+      type: new BooleanField({ initial })
     });
   }
 

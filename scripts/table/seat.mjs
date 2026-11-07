@@ -9,6 +9,7 @@ import * as sheet from "../../../awesome-vtt-core/scripts/sheet.mjs";
 import { PromptQueue, askSheetRoll, askItemRoll } from "../../../awesome-vtt-core/scripts/prompts.mjs";
 import * as coreUI from "../../../awesome-vtt-core/scripts/ui.mjs";
 import Keypad from "./keypad.mjs";
+import { mergeNotices } from "./notices.mjs";
 
 const { renderTemplate } = foundry.applications.handlebars;
 const tpl = name => `modules/${MODULE_ID}/templates/${name}.hbs`;
@@ -30,6 +31,10 @@ const NOTICE_WARNING_MS = 8000;
 const NOTICE_RESULT_MS = 15000;
 /** A notice with a button (e.g. Roll damage) stays longer, so the player has time to use it. */
 const NOTICE_ACTION_MS = 30000;
+/** Notices about another character (table/notices.mjs) are brief. */
+const NOTICE_PASSIVE_MS = 6000;
+/** At most this many notices about other characters wait for a seat's notice to go (the oldest is dropped). */
+const MAX_QUEUED_NOTICES = 12;
 
 /**
  * Panels of a seat: quick actions (from the player pill) and the sections (section bar; "party" while the shared
@@ -264,6 +269,7 @@ export default class Seat {
     // Fold the map tools and sections away until the pointer comes near (see the CSS).
     this.element.classList.toggle("avtt-fold", getSetting("foldPill"));
     this.#applyCompact();
+    this.#applyUnread();
     this.onPillRendered?.();
   }
 
@@ -579,6 +585,8 @@ export default class Seat {
   }
 
   async renderChat() {
+    // The player is reading the chat: nothing is unread any more.
+    this.#setUnread(0);
     const log = this.element.querySelector(".avtt-chat-log");
     const { messages } = sheet.chatMessages({ actorId: this.#chatActorId, limit: getSetting("chatHistory") });
     const items = await Promise.all(messages.map(m => coreUI.renderMessage(m)));
@@ -630,13 +638,88 @@ export default class Seat {
    * @param {"create"|"update"|"delete"} action
    */
   async onChatMessage(message, action) {
-    if ( this.state.panel !== "chat" ) return;
+    if ( this.state.panel !== "chat" ) {
+      if ( (action === "create") && this.#isUnread(message) ) this.#setUnread(this.#unread + 1);
+      return;
+    }
     const log = this.element.querySelector(".avtt-chat-log");
     const result = await coreUI.syncMessage(log, message, action, sheet.chatShows(message, this.#chatActorId));
     if ( result !== "added" ) return;
     const limit = getSetting("chatHistory");
     while ( log.children.length > limit ) log.firstElementChild.remove();
     log.scrollTop = log.scrollHeight;
+  }
+
+  /**
+   * Unread counts per seated character (original id), owned by the overlay so a rebuild of the seats (any seats or
+   * display setting change) keeps them; a seat built on its own has its own map.
+   * @type {Map<string, number>}
+   */
+  unreadCounts = new Map();
+
+  /**
+   * New messages spoken as this seat's character since its chat panel was last open.
+   * @returns {number}
+   */
+  get #unread() {
+    return this.unreadCounts.get(this.config.actorId) ?? 0;
+  }
+
+  /**
+   * Does a new message count as unread here: spoken as this seat's character (or a form of it), visible to the
+   * table, and not sent from this screen (the seat saw its own rolls happen)?
+   * @param {ChatMessage} message
+   * @returns {boolean}
+   */
+  #isUnread(message) {
+    if ( !message.visible || message.isAuthor ) return false;
+    const speaker = game.actors.get(message.speaker?.actor);
+    return !!speaker && (sys.originalId(speaker) === this.config.actorId);
+  }
+
+  /**
+   * Set the unread count and show it on the Chat section button.
+   * @param {number} n
+   */
+  #setUnread(n) {
+    if ( n ) this.unreadCounts.set(this.config.actorId, n);
+    else this.unreadCounts.delete(this.config.actorId);
+    this.#applyUnread();
+  }
+
+  /**
+   * Draw the unread count (also after a re-render): on the Chat section button (`data-unread`, a badge in the CSS),
+   * and on the player pill itself, which stays visible while the pill is folded (`.avtt-pill-unread`, shown by the
+   * CSS only on a folded pill; the pill is then fully opaque, `.avtt-has-unread`, so the alert isn't faded).
+   */
+  #applyUnread() {
+    const n = this.#unread;
+    const text = (n > 99) ? "99+" : String(n);
+    const label = game.i18n.localize("AVTT.Sections.chat");
+    const aria = n ? game.i18n.format("AVTT.Pill.ChatUnread", { label, n }) : label;
+    const button = this.element.querySelector('.avtt-pill-sections [data-panel="chat"]');
+    if ( button ) {
+      if ( n ) button.dataset.unread = text;
+      else delete button.dataset.unread;
+      button.setAttribute("aria-label", aria);
+    }
+    const pill = this.element.querySelector(".avtt-pill");
+    if ( !pill ) return;
+    pill.classList.toggle("avtt-has-unread", n > 0);
+    let badge = pill.querySelector(":scope > .avtt-pill-unread");
+    if ( !n ) {
+      badge?.remove();
+      return;
+    }
+    if ( !badge ) {
+      badge = document.createElement("span");
+      badge.className = "avtt-pill-unread";
+      badge.setAttribute("role", "status");
+      pill.append(badge);
+    }
+    badge.textContent = text;
+    badge.setAttribute("aria-label", aria);
+    badge.title = aria;
   }
 
   /* -------------------------------------------- */
@@ -873,26 +956,74 @@ export default class Seat {
    * A short notice just above the pill, facing this seat's player: a warning before an action (e.g. no target), or
    * the result of a damage or healing roll. Clicking it dismisses it; it also goes away by itself.
    * @param {object} notice
-   * @param {"warning"|"damage"|"healing"} notice.kind
+   * @param {"warning"|"damage"|"healing"|"roll"|"request"|"hurt"} notice.kind
    * @param {string} notice.text      Main line.
    * @param {string} [notice.detail]  Smaller second line.
    * @param {{label: string, run: Function}} [notice.action]  A button under the notice (e.g. Roll damage); using it
    *   closes the notice.
+   * @param {boolean} [notice.passive]  About another character, for everyone (table/notices.mjs, kinds "request" and
+   *   "hurt"), shown briefly. While a notice is on screen, a passive one of the same kind is merged into it (one
+   *   notice listing the characters, see mergeNotices; the same character's newer one replaces its older one), and
+   *   any other passive one waits in a queue and shows when the notice goes. A seat's own notice always shows at once.
+   * @param {string} [notice.id]  Passive: the character it is about (merging).
+   * @param {string|null} [notice.tint]  "#rrggbb": the background of a passive notice (its player's colour).
    * Drawn by the core's fillNotice, with the classes avtt-notice-warning / avtt-notice-damage / avtt-notice-healing,
    * avtt-notice-text, avtt-notice-detail and avtt-notice-close; the button is drawn by the core's fillNoticeAction.
    */
   showNotice(notice) {
     const el = this.element.querySelector(".avtt-notice");
+    if ( notice.passive && !el.hidden ) {
+      const shown = this.#passiveShown;
+      if ( shown?.[0].kind !== notice.kind ) {
+        if ( this.#noticeQueue.length >= MAX_QUEUED_NOTICES ) this.#noticeQueue.shift();
+        this.#noticeQueue.push(notice);
+        return;
+      }
+      const i = shown.findIndex(n => n.id === notice.id);
+      if ( i >= 0 ) shown[i] = notice;
+      else shown.push(notice);
+      this.#drawNotice(mergeNotices(shown));
+      return;
+    }
+    this.#passiveShown = notice.passive ? [notice] : null;
+    this.#drawNotice(notice);
+  }
+
+  /**
+   * Draw a notice and start its timer.
+   * @param {object} notice  See showNotice.
+   */
+  #drawNotice(notice) {
+    const el = this.element.querySelector(".avtt-notice");
     coreUI.fillNotice(el, "avtt-notice", notice, game.i18n.localize("AVTT.Notice.Dismiss"));
     coreUI.fillNoticeAction(this.element.querySelector(".avtt-notice-action"), notice.action);
+    if ( notice.tint ) {
+      el.style.setProperty("--notice-tint", notice.tint);
+      el.style.setProperty("--notice-ink", coreUI.inkFor(notice.tint));
+    } else {
+      el.style.removeProperty("--notice-tint");
+      el.style.removeProperty("--notice-ink");
+    }
     window.clearTimeout(this.#noticeTimer);
-    const ms = notice.action ? NOTICE_ACTION_MS : (notice.kind === "warning") ? NOTICE_WARNING_MS : NOTICE_RESULT_MS;
+    const ms = notice.action ? NOTICE_ACTION_MS : notice.passive ? NOTICE_PASSIVE_MS
+      : (notice.kind === "warning") ? NOTICE_WARNING_MS : NOTICE_RESULT_MS;
     this.#noticeTimer = window.setTimeout(() => this.hideNotice(), ms);
   }
+
+  /** The passive notices merged into the one on screen, or null when it is the seat's own (or none was shown). */
+  #passiveShown = null;
+
+  /** Passive notices waiting for the one on screen to go. */
+  #noticeQueue = [];
 
   hideNotice() {
     window.clearTimeout(this.#noticeTimer);
     for ( const el of this.element.querySelectorAll(".avtt-notice, .avtt-notice-action") ) el.hidden = true;
+    this.#passiveShown = null;
+    // Then the waiting passive notices: the first shows, the others of its kind merge into it, the rest wait again.
+    const queued = this.#noticeQueue;
+    this.#noticeQueue = [];
+    queued.forEach(n => this.showNotice(n));
   }
 
   /** Mark the active map tool on this seat's pill without re-rendering it. */

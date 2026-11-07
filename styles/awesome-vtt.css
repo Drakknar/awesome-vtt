@@ -191,6 +191,31 @@ body.avtt-hide-ui #chat-notifications { display: none !important; }
 /* The label stretches across the button instead of using a percentage max-width: a percentage made the natural
    width measured by the pill fitting grow with the button's current width (see Seat#measurePillNeed). */
 .avtt-pill-sections button span { display: block; align-self: stretch; min-width: 0; text-align: center; font-size: 0.75em; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; }
+/* New messages spoken as the seat's character since its chat was last open (Seat#applyUnread). */
+.avtt-pill-sections button[data-unread] { position: relative; }
+.avtt-pill-sections button[data-unread]::after {
+  content: attr(data-unread);
+  position: absolute; top: 0.15em; right: 0.25em;
+  min-width: 1.4em; padding: 0 0.3em;
+  border-radius: 999px;
+  background: var(--avtt-hp-low); color: #fff;
+  font-size: 0.7em; font-weight: bold; line-height: 1.4em; text-align: center;
+  pointer-events: none;
+}
+/* The same count on the folded player pill, so it shows without unfolding (alerts are always visible, owner's
+   decision 2026-11-06); a folded pill with unread messages doesn't fade. Hidden when the pill isn't folded (the Chat button
+   shows it). */
+.avtt-fold .avtt-pill.avtt-has-unread { opacity: 1; }
+.avtt-pill-unread {
+  position: absolute; top: -0.6em; right: 1.2em;
+  min-width: 1.6em; padding: 0 0.35em; box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--avtt-hp-low); color: #fff;
+  font-size: 0.8em; font-weight: bold; line-height: 1.6em; text-align: center;
+  box-shadow: 0 0 0 2px var(--seat-color);
+  pointer-events: none;
+}
+.avtt-seat:not(.avtt-fold) .avtt-pill-unread { display: none; }
 /* Only when an edge can't fit its pills at full width (see TableOverlay#fitPills) do the labels give way to icons. */
 .avtt-pill-sections.compact button span { display: none; }
 /* Player pill: quick actions and the armed advantage chip, at its right; Level up in the character panel's header. */
@@ -528,6 +553,13 @@ body:not([data-avtt-system="dnd5e"]) .avtt-chat-log .chat-message .message-heade
 .avtt-seat button.avtt-notice-healing { background: var(--avtt-hp); border-color: var(--avtt-hp); color: #111; }
 /* Any other roll: the colour of the seat's player. */
 .avtt-seat button.avtt-notice-roll { background: var(--seat-color); border-color: var(--seat-color); color: var(--seat-ink, #111); }
+/* About another character, for every seat (table/notices.mjs): the colour of that character's player, if known. */
+.avtt-seat button:is(.avtt-notice-request, .avtt-notice-hurt) {
+  background: var(--notice-tint, var(--avtt-bg-solid));
+  border-color: var(--notice-tint, var(--avtt-border));
+  color: var(--notice-ink, var(--avtt-text));
+}
+.avtt-seat button:is(.avtt-notice-request, .avtt-notice-hurt) .avtt-notice-text { font-size: 1.1em; }
 @keyframes avtt-notice-in { from { opacity: 0; transform: translateY(0.6em); } }
 /* The notice's button (Roll damage), between the notice and the pill. */
 .avtt-seat .avtt-notice-action {
