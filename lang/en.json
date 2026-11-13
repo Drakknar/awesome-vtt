@@ -304,7 +304,9 @@
       "TargetsCleared": "Targets cleared",
       "TargetsClearedHint": "Those targets were used by another character's action. Target the tokens for this button, then press it again.",
       "NoUses": "No uses left",
-      "NoUsesHint": "{name}: {value} left, needs {cost}."
+      "NoUsesHint": "{name}: {value} left, needs {cost}.",
+      "NotUsable": "Can't be used right now",
+      "NotUsableHint": "{name} has nothing that can be used now, e.g. inside an antimagic area, or while unattuned or unidentified."
     },
     "Notice": {
       "Damage": "damage",

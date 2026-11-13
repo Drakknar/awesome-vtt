@@ -840,10 +840,15 @@ export default class Seat {
         return this.renderQuick();
       // SotDL rolls straight away with the Next roll's boons or banes (with "Ask for boons and banes" on, an attack
       // whose boons or banes come from somewhere asks first, listing them); dnd5e asks in its own windows.
-      case "useItem":
-        if ( !sys.FEATURES.itemRollMode ) return sys.useItem(actor, target.dataset.itemId);
-        if ( getSetting("askBoons") && askItemRoll(this.prompts, actor, target.dataset.itemId) ) return;
-        return this.#d20(mode => sys.useItem(actor, target.dataset.itemId, mode));
+      // dnd5e: an item whose activities are all hidden (antimagic, unattuned, …) would only post its card.
+      case "useItem": {
+        const itemId = target.dataset.itemId;
+        const item = actor.items.get(itemId);
+        if ( getSetting("useChecks") && sys.useBlocked(item) ) return this.#notUsable(item);
+        if ( !sys.FEATURES.itemRollMode ) return sys.useItem(actor, itemId);
+        if ( getSetting("askBoons") && askItemRoll(this.prompts, actor, itemId) ) return;
+        return this.#d20(mode => sys.useItem(actor, itemId, mode));
+      }
       case "turnSpeed": return sys.setTurnSpeed(actor, target.dataset.fast === "true");
       case "hpMode": return this.#setHpMode(target.dataset.mode);
       case "applyHp": return this.#applyHp();
@@ -951,6 +956,18 @@ export default class Seat {
   /* -------------------------------------------- */
 
   #noticeTimer;
+
+  /**
+   * Warn in this seat that an item can't be used now (core useBlocked: dnd5e hid all its activities).
+   * @param {Item} item
+   */
+  #notUsable(item) {
+    this.showNotice({
+      kind: "warning",
+      text: game.i18n.localize("AVTT.Checks.NotUsable"),
+      detail: game.i18n.format("AVTT.Checks.NotUsableHint", { name: item.name })
+    });
+  }
 
   /**
    * A short notice just above the pill, facing this seat's player: a warning before an action (e.g. no target), or

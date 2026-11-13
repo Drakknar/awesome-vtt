@@ -52,6 +52,7 @@ Sister module: `../awesome-vtt-mobile` (phone companion).
   - **Known upstream limitation:** item macros (a demonlord bug); out of scope, not worked around.
   - **Known limits (documented, not handled):** health notices watch the seated world actors (and their forms), not an unlinked token's own synthetic actor, so damage to an unlinked token isn't announced. Clicking a notice's **Roll damage** (`rollDamageFrom`, which clicks the card's `.roll-damage` buttons from code) bypasses the card-button target rule (harmless in SotDL: demonlord 6.1.14's `_onChatRollDamage` reads the targets only to pass them to its own hook; applying damage reads them, through the seat's chat buttons, which keep the rule). While a physical-dice entry window is open, another seat can start an action that reuses the same targets, since they are marked used only after the use finishes (pre-existing, dnd5e too).
   - **Phone:** unchanged on purpose (players' own users receive the whispers natively); its core minimum 0.17.0 stays valid.
+- **dnd5e 6.1 (0.17.0, needs core 0.19.0, 2026-11-13, issue #32):** seat `useItem` shows `AVTT.Checks.NotUsable` when core `useBlocked` (all activities hidden, e.g. antimagic), under `useChecks`; `use-checks.mjs` follow-up rolls use core `activityIsLike`; Status tab draws locked conditions (antimagic) disabled. See the core's notes.
 - **Out of scope for now:** Actor Studio and Pixels support.
 
 ## Working on it
