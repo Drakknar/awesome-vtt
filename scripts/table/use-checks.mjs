@@ -1,6 +1,6 @@
 import { getSetting } from "../settings.mjs";
 import sys, { damageAction } from "../../../awesome-vtt-core/scripts/system.mjs";
-import { messageActor } from "../../../awesome-vtt-core/scripts/common.mjs";
+import { messageActor, activityIsLike } from "../../../awesome-vtt-core/scripts/common.mjs";
 
 /**
  * Hooks on the table screen, around using an item's activity (dnd5e 6.x; in SotDL the targets rule, around the
@@ -75,10 +75,10 @@ export function registerUseChecks(overlay) {
     if ( !getSetting("autoRoll") || (usageConfig.subsequentActions === false) ) return;
     const message = results?.message;
     const origin = message?.id;
-    if ( (activity.type === "save") && activity.damage?.parts?.length ) {
+    if ( activityIsLike(activity, "save") && activity.damage?.parts?.length ) {
       activity.rollDamage({}, {}, { data: { system: { targets: message?.system?.targets, origin } } });
     }
-    else if ( (activity.type === "utility") && activity.roll?.formula ) {
+    else if ( activityIsLike(activity, "utility") && activity.roll?.formula ) {
       activity.rollFormula({}, {}, { data: { system: { origin } } });
     }
   });

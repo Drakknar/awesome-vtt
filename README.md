@@ -142,6 +142,7 @@ These parts are based on the v14 API docs and the dnd5e 6.0.5 source, but have *
 - **Stacking:** the overlay sits at `z-index: 50`, meant to be above the canvas and below application windows. Adjust this in `styles/awesome-vtt.css` if dialogs appear behind panels.
 - **Corner overlap:** open panels on corner seats (e.g. "Bottom left" and "Left bottom") can overlap. The seat you last clicked is drawn on top.
 - **Pill height:** the pill has three rows, so it reaches further into the table than a one-row pill; panels get the remaining depth.
+- **Actions dnd5e hides** (dnd5e 6.1 antimagic areas, unattuned or unidentified magic items) aren't listed as usable, as on dnd5e's own sheet. Using such an item anyway (a favorite, say) shows "Can't be used right now" in the seat instead of posting its card; an active antimagic status shows on the pill and in the Status tab, where it can't be toggled.
 - **Unlinked tokens transformed in place:** transforming a token that isn't linked to its actor changes only that token. The map shows the form, but the seat keeps showing the character and offers no Revert. Player characters' tokens are normally linked.
 
 ## Structure
